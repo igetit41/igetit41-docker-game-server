@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mc:
+    image: itzg/minecraft-server
+    container_name: minecraftserver-atm9
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    environment:
+      EULA: "TRUE"
+
+      TYPE: FORGE
+      VERSION: 1.20.1
+      #FORGE_VERSION: 47.3.0
+      #GENERIC_PACK: /modpacks/server-1.1.3.zip #ATM9-Skyblocks
+      #GENERIC_PACK: /modpacks/Server-Files-2.13.zip #ATM10
+
+      FORGE_VERSION: 47.3.11
+      GENERIC_PACK: /modpacks/Server-Files-1.0.2.zip #ATM9
+      #REMOVE_OLD_MODS: "TRUE"
+
+      MEMORY: "48G"
+
+      #WHITELIST: "D3F1L3,PlanetHEOS0X"
+      #OP: |
+      #  D3F1L3,
+      #  PlanetHEOS0X,
+      
+      #"D3F1L3X"
+      #"PlanetHEOS0X"
+      
+      #"8a30e43b-73c2-49d3-bccc-ad50d8dbb928"
+      #"575f63e4-a0b2-4718-850d-d91f21f080af"
+
+      OVERRIDE_SERVER_PROPERTIES: "TRUE"
+      SERVER_NAME: "OsteBoys-ATM9"
+      MODE: "survival"
+      DIFFICULTY: "hard"
+      PVP: "FALSE"
+      ALLOW_FLIGHT: "TRUE"
+      CUSTOM_SERVER_PROPERTIES: |
+        allow-cheats=true
+        level-name=OsteBoys-ATM9
+
+    ports:
+      - "25565:25565"
+    volumes:
+      - ./data:/data
+      - ./modpacks:/modpacks
+
+volumes:
+  data:
