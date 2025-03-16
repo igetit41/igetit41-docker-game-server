@@ -1,4 +1,6 @@
 #!/bin/bash
+GITPATH=/home/d3f1l3/igetit41-docker-game-server
+
 git -C $GITPATH reset --hard
 git -C $GITPATH pull origin main
 chmod +x $GITPATH/game_server/game_server.sh

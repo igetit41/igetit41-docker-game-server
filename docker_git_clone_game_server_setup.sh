@@ -1,10 +1,16 @@
 #!/bin/bash
+export GITPATH=/home/d3f1l3/igetit41-docker-game-server
 echo 'export GITPATH=/home/d3f1l3/igetit41-docker-game-server' >> ~/.bashrc
+
+export CONTAINER=game_server
 echo 'export CONTAINER=game_server' >> ~/.bashrc
 
 
 # Changes Section - Unique to Each Game
 #echo 'export SERVER_PORT=15636' >> ~/.bashrc # Enshrouded
+#echo 'export SERVER_PORT=25565' >> ~/.bashrc # Minecraft
+
+export SERVER_PORT=16261 # Project Zomboid
 echo 'export SERVER_PORT=16261' >> ~/.bashrc # Project Zomboid
 
 sudo apt update -y
@@ -35,15 +41,15 @@ newgrp docker
 cd ~
 git clone https://github.com/igetit41/igetit41-docker-game-server
 sudo git config --global --add safe.directory $GITPATH
-#git -C ~/igetit41-docker-game-server reset --hard
-#git -C ~/igetit41-docker-game-server pull origin main
+git -C ~/igetit41-docker-game-server reset --hard
+git -C ~/igetit41-docker-game-server pull origin main
 
 sudo chmod +x ~/igetit41-docker-game-server/game_server/game_server.sh
 
 sudo cp ~/igetit41-docker-game-server/game_server/game_server.service /etc/systemd/system/game_server.service
 
 sudo systemctl daemon-reload
-sudo systemctl enable game_server
+#sudo systemctl enable game_server
 sudo systemctl restart game_server
 
 tail -100  /var/log/syslog | grep game_server
