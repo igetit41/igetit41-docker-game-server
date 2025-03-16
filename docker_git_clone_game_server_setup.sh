@@ -4,7 +4,8 @@ echo 'export CONTAINER=game_server' >> ~/.bashrc
 
 
 # Changes Section - Unique to Each Game
-echo 'export SERVER_PORT=16261' >> ~/.bashrc
+#echo 'export SERVER_PORT=15636' >> ~/.bashrc # Enshrouded
+echo 'export SERVER_PORT=16261' >> ~/.bashrc # Project Zomboid
 
 sudo apt update -y
 sudo apt install net-tools
