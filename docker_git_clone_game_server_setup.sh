@@ -61,3 +61,4 @@ sudo docker compose --file $GITPATH/game_server/compose.yaml ps
 
 sudo docker compose --file $GITPATH/game_server/compose.yaml down
 sudo poweroff
+

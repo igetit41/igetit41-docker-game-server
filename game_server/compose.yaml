@@ -9,7 +9,6 @@ services:
     network_mode: "host"
     ports:
       - "8766:8767/udp"
-      - "8766:8767/udp"
       - "16261:16261/udp"
       - "16262:16272/tcp"
     environment:
