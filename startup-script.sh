@@ -17,7 +17,7 @@ IDLE_COUNT=15
 # Count Idle Intervals
 COUNT=0
 
-if [ true ]; then
+if [ -d $GITPATH ]; then
     sudo git config --global --add safe.directory '*'
 
     sudo git -C $GITPATH reset --hard
@@ -29,7 +29,6 @@ if [ true ]; then
 
     sudo systemctl daemon-reload
     sudo systemctl restart game_server
-
 else
     sudo apt update -y
     sudo apt install net-tools
@@ -54,7 +53,6 @@ else
     sudo usermod -a -G docker $USER
     newgrp docker
 
-
     # Clone Repo
     cd ~
     git clone https://github.com/igetit41/igetit41-docker-game-server
@@ -67,7 +65,6 @@ else
     sudo systemctl daemon-reload
     sudo systemctl enable game_server
     sudo systemctl restart game_server
-
 fi
 
 # Main loop
