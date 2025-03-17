@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GITPATH=/home/d3f1l3/igetit41-docker-game-server
+GITPATH=$(pwd)/igetit41-docker-game-server
 CONTAINER=game_server
 
 # Changes Section - Unique to Each Game
@@ -58,9 +58,9 @@ else
     git clone https://github.com/igetit41/igetit41-docker-game-server
     sudo git config --global --add safe.directory $GITPATH
 
-    sudo chmod +x ~/igetit41-docker-game-server/game_server/game_server.sh
+    sudo chmod +x $GITPATH/game_server/game_server.sh
 
-    sudo cp ~/igetit41-docker-game-server/game_server/game_server.service /etc/systemd/system/game_server.service
+    sudo cp $GITPATH/game_server/game_server.service /etc/systemd/system/game_server.service
 
     sudo systemctl daemon-reload
     sudo systemctl enable game_server
