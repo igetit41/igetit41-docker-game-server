@@ -10,6 +10,7 @@ gcloud commands:
 
 export PROJECT_NAME=<your project name>
 export PROJECT_ID=<your project id>
+export STARTUP_FILE_PATH=<path to startup script>
 
 gcloud compute --project=$PROJECT_NAME firewall-rules create zomboid --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:16262-16272,udp:8766-8767,udp:16261 --target-tags=zomboid
 
@@ -30,7 +31,8 @@ gcloud compute instances create zomboid-server \
     --shielded-integrity-monitoring \
     --labels=goog-ops-agent-policy=v2-x86-template-1-4-0,goog-ec-src=vm_add-gcloud \
     --reservation-affinity=any \
-&& \
+    --metadata-from-file=startup-script=$STARTUP_FILE_PATH
+    
 printf 'agentsRule:\n  packageState: installed\n  version: latest\ninstanceFilter:\n  inclusionLabels:\n  - labels:\n      goog-ops-agent-policy: v2-x86-template-1-4-0\n' > config.yaml
 
 gcloud compute instances ops-agents policies create goog-ops-agent-v2-x86-template-1-4-0-us-west1-a \
