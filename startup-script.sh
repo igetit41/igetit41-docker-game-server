@@ -18,15 +18,15 @@ IDLE_COUNT=15
 # Count Idle Intervals
 COUNT=0
 
-if [ -d $GITPATH ]; then
+if [ -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-pull-origin"
     cd /home/game-server
 
-    sudo -H -u game-server bash -c 'git -C $GITPATH reset --hard'
-    sudo -H -u game-server bash -c 'git -C $GITPATH pull origin main'
+    sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server reset --hard'
+    sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server pull origin main'
 
-    sudo chmod +x $GITPATH/game-server/game-server.sh
-    sudo cp $GITPATH/game-server/game-server.service /etc/systemd/system/game-server.service
+    sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/game-server.sh
+    sudo cp /home/game-server/igetit41-docker-game-server/game-server/game-server.service /etc/systemd/system/game-server.service
 
     echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
@@ -49,7 +49,7 @@ if [ -d $GITPATH ]; then
         
         if [ $COUNT -gt $IDLE_COUNT ]; then
             echo "-----startup-script-output-$STAMP-shutting-down"
-            sudo docker compose --file $GITPATH/game-server/compose.yaml down
+            sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
             sudo poweroff
             break
         fi
@@ -92,10 +92,10 @@ else
     # Clone Repo
     echo "-----startup-script-output-clone-repo"
     sudo -H -u game-server bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
-    sudo git config --global --add safe.directory $GITPATH
+    sudo git config --global --add safe.directory /home/game-server/igetit41-docker-game-server
 
-    sudo chmod +x $GITPATH/game-server/game-server.sh
-    sudo cp $GITPATH/game-server/game-server.service /etc/systemd/system/game-server.service
+    sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/game-server.sh
+    sudo cp /home/game-server/igetit41-docker-game-server/game-server/game-server.service /etc/systemd/system/game-server.service
 
     echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload

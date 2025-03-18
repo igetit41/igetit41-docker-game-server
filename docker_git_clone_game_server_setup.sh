@@ -1,6 +1,4 @@
 #!/bin/bash
-export GITPATH=/home/d3f1l3/igetit41-docker-game-server
-echo 'export GITPATH=/home/d3f1l3/igetit41-docker-game-server' >> ~/.bashrc
 
 export CONTAINER=game-server
 echo 'export CONTAINER=game-server' >> ~/.bashrc
@@ -40,7 +38,7 @@ newgrp docker
 # Clone Repo
 cd ~
 git clone https://github.com/igetit41/igetit41-docker-game-server
-sudo git config --global --add safe.directory $GITPATH
+sudo git config --global --add safe.directory /home/game-server/igetit41-docker-game-server
 git -C ~/igetit41-docker-game-server reset --hard
 git -C ~/igetit41-docker-game-server pull origin main
 
@@ -55,10 +53,10 @@ sudo systemctl restart game-server
 tail -100  /var/log/syslog | grep game-server
 sudo docker logs game-server
 
-sudo docker compose --file $GITPATH/game-server/compose.yaml up -d
-sudo docker compose --file $GITPATH/game-server/compose.yaml ps
+sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml up -d
+sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml ps
 
 
-sudo docker compose --file $GITPATH/game-server/compose.yaml down
+sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
 sudo poweroff
 
