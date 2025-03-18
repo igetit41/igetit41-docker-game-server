@@ -1,6 +1,12 @@
 #!/bin/bash
 
+cd ~
 GITPATH=$(pwd)/igetit41-docker-game-server
+
+echo $(pwd)
+echo $GITPATH
+echo $(ls -A)
+
 CONTAINER=game_server
 
 # Changes Section - Unique to Each Game
@@ -54,7 +60,6 @@ else
     newgrp docker
 
     # Clone Repo
-    cd ~
     git clone https://github.com/igetit41/igetit41-docker-game-server
     sudo git config --global --add safe.directory $GITPATH
 
