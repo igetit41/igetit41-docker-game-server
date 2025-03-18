@@ -55,8 +55,6 @@ sudo docker logs game-server
 
 sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml up -d
 sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml ps
-
-
 sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
 sudo poweroff
 

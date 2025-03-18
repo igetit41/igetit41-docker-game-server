@@ -1,6 +1,13 @@
 #!/bin/bash
 echo "-----startup-script-output-begin"
-GITPATH=/home/game-server/igetit41-docker-game-server
+
+# Troubleshooting
+#tail -100  /var/log/syslog | grep game-server
+#sudo docker logs game-server
+#
+#sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml up -d
+#sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml ps
+#sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
 
 CONTAINER=game-server
 
