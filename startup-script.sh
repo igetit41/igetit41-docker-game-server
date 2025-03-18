@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo "-----startup-script-output-begin"
 GITPATH=/home/game-server/igetit41-docker-game-server
 
 CONTAINER=game-server
@@ -19,20 +19,24 @@ IDLE_COUNT=15
 COUNT=0
 
 if [ -d $GITPATH ]; then
+    echo "-----startup-script-output-pull-origin"
     cd /home/game-server
 
-    sudo -H -u pre-network-packet-capture bash -c 'git -C $GITPATH reset --hard'
-    sudo -H -u pre-network-packet-capture bash -c 'git -C $GITPATH pull origin main'
+    sudo -H -u game-server bash -c 'git -C $GITPATH reset --hard'
+    sudo -H -u game-server bash -c 'git -C $GITPATH pull origin main'
 
     sudo chmod +x $GITPATH/game-server/game-server.sh
     sudo cp $GITPATH/game-server/game-server.service /etc/systemd/system/game-server.service
 
+    echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
     sudo systemctl restart game-server
 else
+    echo "-----startup-script-output-first-run"
     sudo apt update -y
     sudo apt install net-tools
 
+    echo "-----startup-script-output-add-user"
     #sudo deluser conntrack-exporter
     useradd -m --shell /sbin/nologin game-server
     passwd -d game-server
@@ -40,6 +44,7 @@ else
     cd /home/game-server
 
     #Install Docker
+    echo "-----startup-script-output-install-docker"
     sudo apt-get install ca-certificates curl
     sudo install -m 0755 -d /etc/apt/keyrings
     sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
@@ -60,12 +65,14 @@ else
     newgrp docker
 
     # Clone Repo
-    sudo -H -u pre-network-packet-capture bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
+    echo "-----startup-script-output-clone-repo"
+    sudo -H -u game-server bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
     sudo git config --global --add safe.directory $GITPATH
 
     sudo chmod +x $GITPATH/game-server/game-server.sh
     sudo cp $GITPATH/game-server/game-server.service /etc/systemd/system/game-server.service
 
+    echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
     sudo systemctl restart game-server
@@ -77,17 +84,17 @@ while true; do
     PID=$(sudo docker inspect -f '{{.State.Pid}}' $CONTAINER)
     CONNECTIONS=$(sudo nsenter -t $PID -n netstat | grep -w $SERVER_PORT | grep ESTABLISHED | wc -l)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
-    echo "STARTUPLOG-$STAMP-CONNECTIONS: $CONNECTIONS"
+    echo "-----startup-script-output-$STAMP-CONNECTIONS: $CONNECTIONS"
 
     if [ $CONNECTIONS -gt 0 ]; then
         COUNT=0
     else
         COUNT=$(expr $COUNT + 1)
     fi
-    echo "STARTUPLOG-$STAMP-COUNT: $COUNT"
+    echo "-----startup-script-output-$STAMP-COUNT: $COUNT"
     
     if [ $COUNT -gt $IDLE_COUNT ]; then
-        echo "STARTUPLOG-$STAMP------------Shutting down"
+        echo "-----startup-script-output-$STAMP-shutting-down"
         sudo docker compose --file $GITPATH/game-server/compose.yaml down
         sudo poweroff
         break
