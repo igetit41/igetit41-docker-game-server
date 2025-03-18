@@ -1,11 +1,11 @@
 version: '3.7'
 services:
-  game_server:
+  game-server:
     # Changes Section - Unique to Each Game
     # Project Zomboid 
     image: danixu86/project-zomboid-dedicated-server:latest
     restart: unless-stopped
-    container_name: game_server
+    container_name: game-server
     network_mode: "host"
     ports:
       - "8766:8767/udp"

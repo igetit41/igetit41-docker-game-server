@@ -2,8 +2,8 @@
 export GITPATH=/home/d3f1l3/igetit41-docker-game-server
 echo 'export GITPATH=/home/d3f1l3/igetit41-docker-game-server' >> ~/.bashrc
 
-export CONTAINER=game_server
-echo 'export CONTAINER=game_server' >> ~/.bashrc
+export CONTAINER=game-server
+echo 'export CONTAINER=game-server' >> ~/.bashrc
 
 
 # Changes Section - Unique to Each Game
@@ -44,21 +44,21 @@ sudo git config --global --add safe.directory $GITPATH
 git -C ~/igetit41-docker-game-server reset --hard
 git -C ~/igetit41-docker-game-server pull origin main
 
-sudo chmod +x ~/igetit41-docker-game-server/game_server/game_server.sh
+sudo chmod +x ~/igetit41-docker-game-server/game-server/game-server.sh
 
-sudo cp ~/igetit41-docker-game-server/game_server/game_server.service /etc/systemd/system/game_server.service
+sudo cp ~/igetit41-docker-game-server/game-server/game-server.service /etc/systemd/system/game-server.service
 
 sudo systemctl daemon-reload
-#sudo systemctl enable game_server
-sudo systemctl restart game_server
+#sudo systemctl enable game-server
+sudo systemctl restart game-server
 
-tail -100  /var/log/syslog | grep game_server
-sudo docker logs game_server
+tail -100  /var/log/syslog | grep game-server
+sudo docker logs game-server
 
-sudo docker compose --file $GITPATH/game_server/compose.yaml up -d
-sudo docker compose --file $GITPATH/game_server/compose.yaml ps
+sudo docker compose --file $GITPATH/game-server/compose.yaml up -d
+sudo docker compose --file $GITPATH/game-server/compose.yaml ps
 
 
-sudo docker compose --file $GITPATH/game_server/compose.yaml down
+sudo docker compose --file $GITPATH/game-server/compose.yaml down
 sudo poweroff
 

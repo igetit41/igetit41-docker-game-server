@@ -1,13 +1,8 @@
 #!/bin/bash
 
-cd ~
-GITPATH=$(pwd)/igetit41-docker-game-server
+GITPATH=/home/game-server/igetit41-docker-game-server
 
-echo $(pwd)
-echo $GITPATH
-echo $(ls -A)
-
-CONTAINER=game_server
+CONTAINER=game-server
 
 # Changes Section - Unique to Each Game
 #export SERVER_PORT=15636 # Enshrouded
@@ -24,20 +19,25 @@ IDLE_COUNT=15
 COUNT=0
 
 if [ -d $GITPATH ]; then
-    sudo git config --global --add safe.directory '*'
+    cd /home/game-server
 
-    sudo git -C $GITPATH reset --hard
-    sudo git -C $GITPATH pull origin main
+    sudo -H -u pre-network-packet-capture bash -c 'git -C $GITPATH reset --hard'
+    sudo -H -u pre-network-packet-capture bash -c 'git -C $GITPATH pull origin main'
 
-    sudo chmod +x $GITPATH/game_server/game_server.sh
-
-    sudo cp $GITPATH/game_server/game_server.service /etc/systemd/system/game_server.service
+    sudo chmod +x $GITPATH/game-server/game-server.sh
+    sudo cp $GITPATH/game-server/game-server.service /etc/systemd/system/game-server.service
 
     sudo systemctl daemon-reload
-    sudo systemctl restart game_server
+    sudo systemctl restart game-server
 else
     sudo apt update -y
     sudo apt install net-tools
+
+    #sudo deluser conntrack-exporter
+    useradd -m --shell /sbin/nologin game-server
+    passwd -d game-server
+    usermod -a -G sudo game-server
+    cd /home/game-server
 
     #Install Docker
     sudo apt-get install ca-certificates curl
@@ -56,20 +56,19 @@ else
     sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 
     sudo service docker start
-    sudo usermod -a -G docker $USER
+    sudo usermod -a -G docker game-server
     newgrp docker
 
     # Clone Repo
-    git clone https://github.com/igetit41/igetit41-docker-game-server
+    sudo -H -u pre-network-packet-capture bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
     sudo git config --global --add safe.directory $GITPATH
 
-    sudo chmod +x $GITPATH/game_server/game_server.sh
-
-    sudo cp $GITPATH/game_server/game_server.service /etc/systemd/system/game_server.service
+    sudo chmod +x $GITPATH/game-server/game-server.sh
+    sudo cp $GITPATH/game-server/game-server.service /etc/systemd/system/game-server.service
 
     sudo systemctl daemon-reload
-    sudo systemctl enable game_server
-    sudo systemctl restart game_server
+    sudo systemctl enable game-server
+    sudo systemctl restart game-server
 fi
 
 # Main loop
@@ -89,7 +88,7 @@ while true; do
     
     if [ $COUNT -gt $IDLE_COUNT ]; then
         echo "STARTUPLOG-$STAMP------------Shutting down"
-        sudo docker compose --file $GITPATH/game_server/compose.yaml down
+        sudo docker compose --file $GITPATH/game-server/compose.yaml down
         sudo poweroff
         break
     fi
