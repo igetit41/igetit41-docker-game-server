@@ -31,6 +31,31 @@ if [ -d $GITPATH ]; then
     echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
     sudo systemctl restart game-server
+
+    # Main loop
+    while true; do
+        # Check the number of established connections on the server port
+        PID=$(sudo docker inspect -f '{{.State.Pid}}' $CONTAINER)
+        CONNECTIONS=$(sudo nsenter -t $PID -n netstat | grep -w $SERVER_PORT | grep ESTABLISHED | wc -l)
+        STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
+        echo "-----startup-script-output-$STAMP-CONNECTIONS: $CONNECTIONS"
+
+        if [ $CONNECTIONS -gt 0 ]; then
+            COUNT=0
+        else
+            COUNT=$(expr $COUNT + 1)
+        fi
+        echo "-----startup-script-output-$STAMP-COUNT: $COUNT"
+        
+        if [ $COUNT -gt $IDLE_COUNT ]; then
+            echo "-----startup-script-output-$STAMP-shutting-down"
+            sudo docker compose --file $GITPATH/game-server/compose.yaml down
+            sudo poweroff
+            break
+        fi
+
+        sleep $CHECK_INTERVAL
+    done
 else
     echo "-----startup-script-output-first-run"
     sudo apt update -y
@@ -76,29 +101,9 @@ else
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
     sudo systemctl restart game-server
-fi
-
-# Main loop
-while true; do
-    # Check the number of established connections on the server port
-    PID=$(sudo docker inspect -f '{{.State.Pid}}' $CONTAINER)
-    CONNECTIONS=$(sudo nsenter -t $PID -n netstat | grep -w $SERVER_PORT | grep ESTABLISHED | wc -l)
-    STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
-    echo "-----startup-script-output-$STAMP-CONNECTIONS: $CONNECTIONS"
-
-    if [ $CONNECTIONS -gt 0 ]; then
-        COUNT=0
-    else
-        COUNT=$(expr $COUNT + 1)
-    fi
-    echo "-----startup-script-output-$STAMP-COUNT: $COUNT"
     
-    if [ $COUNT -gt $IDLE_COUNT ]; then
-        echo "-----startup-script-output-$STAMP-shutting-down"
-        sudo docker compose --file $GITPATH/game-server/compose.yaml down
-        sudo poweroff
-        break
-    fi
-
-    sleep $CHECK_INTERVAL
-done
+    while true; do
+        echo "-----startup-script-output-server-creating"
+        sleep $CHECK_INTERVAL
+    done
+fi
