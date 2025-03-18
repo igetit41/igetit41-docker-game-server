@@ -3,8 +3,8 @@ Description=game-server
 
 [Service]
 User=game-server
-WorkingDirectory=%h/igetit41-docker-game-server/game-server
-ExecStart=%h/igetit41-docker-game-server/game-server/game-server.sh
+WorkingDirectory=/home/game-server/igetit41-docker-game-server/game-server
+ExecStart=/home/game-server/igetit41-docker-game-server/game-server/game-server.sh
 Restart=on-failure
 
 [Install]
