@@ -43,7 +43,7 @@ if [ -d /home/game-server/igetit41-docker-game-server ]; then
     while true; do
         # Check the number of established connections on the server port
         PID=$(sudo docker inspect -f '{{.State.Pid}}' $CONTAINER)
-        CONNECTIONS=$(sudo nsenter -t $PID -n netstat | grep -w $SERVER_PORT | grep ESTABLISHED | wc -l)
+        CONNECTIONS=$(sudo nsenter -t $PID -n netstat -pnl | grep -w $SERVER_PORT | grep ESTABLISHED | wc -l)
         STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
         echo "-----startup-script-output-$STAMP-CONNECTIONS: $CONNECTIONS"
 
