@@ -32,7 +32,7 @@ gcloud compute instances create game-server \
 --zone=$REGION-a \ 
 --machine-type=e2-highmem-4 \ 
 --network-interface=network-tier=STANDARD,stack-type=IPV4_ONLY,subnet=default \ 
---metadata=enable-osconfig=TRUE \ 
+--metadata=enable-osconfig=TRUE,RCON_PW="$RCON_PW" \ 
 --maintenance-policy=MIGRATE \ 
 --provisioning-model=STANDARD \ 
 --service-account=$PROJECT_ID-compute@developer.gserviceaccount.com \ 
@@ -45,5 +45,4 @@ gcloud compute instances create game-server \
 --labels=goog-ops-agent-policy=v2-x86-template-1-4-0,goog-ec-src=vm_add-gcloud \ 
 --reservation-affinity=any \ 
 --metadata-from-file=startup-script=$STARTUP_FILE_PATH
---metadata=RCON_PW="$RCON_PW"
 

@@ -117,11 +117,21 @@ else
     sudo systemctl restart game-server
 
     until [ "`sudo docker inspect -f {{.State.Running}} game-server`"=="true" ]; do
+        echo $(sudo docker inspect -f {{.State.Running}} game-server)
         sleep 0.1;
     done;
 
-    sudo docker exec -it game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz"
-    sudo docker exec -it game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz
+    sudo docker exec -it game-server ls
+    echo (sudo docker exec -it game-server ls)
+    echo "-----startup-script-output-dockering-1"
+    echo $(sudo docker exec -it game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+    sudo docker exec -it game-server ls
+    echo (sudo docker exec -it game-server ls)
+    echo "-----startup-script-output-dockering-2"
+    echo $(sudo docker exec -it game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+    sudo docker exec -it game-server ls
+    echo (sudo docker exec -it game-server ls)
+    echo "-----startup-script-output-dockering-3"
     
     while true; do
         echo "-----startup-script-output-server-creating"
