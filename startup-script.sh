@@ -116,9 +116,11 @@ else
     sudo systemctl enable game-server
     sudo systemctl restart game-server
 
-    until [ "`sudo docker inspect -f {{.State.Running}} game-server`"=="true" ]; do
-        echo $(sudo docker inspect -f {{.State.Running}} game-server)
-        sleep 0.1;
+    #until [ "`sudo docker inspect -f {{.State.Running}} game-server`"=="true" ]; do
+    until [ "`sudo docker exec -it game-serve pwd`"!="/home/steam" ]; do
+        echo "-----startup-script-output-waiting-for-server"
+        echo $(sudo docker exec -it game-serve pwd)
+        sleep 1;
     done;
 
     sudo docker exec -it game-server ls
