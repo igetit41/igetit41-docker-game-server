@@ -116,27 +116,39 @@ else
     sudo systemctl enable game-server
     sudo systemctl restart game-server
 
-    #until [ "`sudo docker inspect -f {{.State.Running}} game-server`"=="true" ]; do
-    until [ "`sudo docker exec -it game-serve pwd`"!="/home/steam" ]; do
-        echo "-----startup-script-output-waiting-for-server"
-        echo $(sudo docker exec -it game-serve pwd)
-        sleep 1;
-    done;
+    WAITING_FOR_CONTAINER=true
 
-    sudo docker exec -it game-server ls
-    echo $(sudo docker exec -it game-server ls)
-    echo "-----startup-script-output-dockering-1"
-    echo $(sudo docker exec -it game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-    sudo docker exec -it game-server ls
-    echo $(sudo docker exec -it game-server ls)
-    echo "-----startup-script-output-dockering-2"
-    echo $(sudo docker exec -it game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
-    sudo docker exec -it game-server ls
-    echo $(sudo docker exec -it game-server ls)
-    echo "-----startup-script-output-dockering-3"
+    while $WAITING_FOR_CONTAINER; do
+        echo "-----startup-script-output-waiting-for-server"
+        sleep 1;
+        if [ "`sudo docker ps | grep game-server`"!="" ]; then
+            if [ "`sudo docker inspect -f {{.State.Running}} game-server`"=="true" ]; then
+                echo "-----startup-script-output-done-waiting"
+                WAITING_FOR_CONTAINER=false
+
+                sudo docker exec -it game-server ls
+                echo "-----startup-script-output-dockering-1"
+
+                echo $(sudo docker exec -it game-server ls)
+                echo "-----startup-script-output-dockering-2"
+
+                sudo docker exec -it game-server mkdir testdir1
+                echo "-----startup-script-output-dockering-3"
+
+                echo $(sudo docker exec -it game-server mkdir testdir2)
+                echo "-----startup-script-output-dockering-4"
+
+                echo $(sudo docker exec -it game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+                echo "-----startup-script-output-dockering-5"
+
+                echo $(sudo docker exec -it game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+                echo "-----startup-script-output-dockering-6"
+            fi
+        fi
+    done
     
     while true; do
-        echo "-----startup-script-output-server-creating"
+        echo "-----startup-script-output-script-finished"
         sleep $CHECK_INTERVAL
     done
 fi
