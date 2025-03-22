@@ -9,7 +9,7 @@ echo "-----startup-script-output-begin"
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml ps
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
 
-CONTAINER=game-server
+export RCON_PW=$('curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google"')
 
 # Changes Section - Unique to Each Game
 #export SERVER_PORT=15636 # Enshrouded
@@ -32,22 +32,27 @@ if [ -d /home/game-server/igetit41-docker-game-server ]; then
     sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server reset --hard'
     sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server pull origin main'
 
-    sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/game-server.sh
+    sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/*.sh
+    sudo chmod +x /home/game-server/igetit41-docker-game-server/*.sh
     sudo cp /home/game-server/igetit41-docker-game-server/game-server/game-server.service /etc/systemd/system/game-server.service
 
     echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
     sudo systemctl restart game-server
 
+    until [ "`sudo docker inspect -f {{.State.Running}} game-server`"=="true" ]; do
+        sleep 0.1;
+    done;
+    
+    sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
+
     # Main loop
     while true; do
-        # Check the number of established connections on the server port
-        PID=$(sudo docker inspect -f '{{.State.Pid}}' $CONTAINER)
-        CONNECTIONS=$(sudo nsenter -t $PID -n netstat -pnl | grep -w $SERVER_PORT | grep ESTABLISHED | wc -l)
+        PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
         STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
-        echo "-----startup-script-output-$STAMP-CONNECTIONS: $CONNECTIONS"
+        echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
 
-        if [ $CONNECTIONS -gt 0 ]; then
+        if [ $PLAYERS -gt 0 ]; then
             COUNT=0
         else
             COUNT=$(expr $COUNT + 1)
@@ -65,6 +70,7 @@ if [ -d /home/game-server/igetit41-docker-game-server ]; then
     done
 else
     echo "-----startup-script-output-first-run"
+
     sudo apt update -y
     sudo apt install net-tools
 
@@ -101,13 +107,21 @@ else
     sudo -H -u game-server bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
     sudo git config --global --add safe.directory /home/game-server/igetit41-docker-game-server
 
-    sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/game-server.sh
+    sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/*.sh
+    sudo chmod +x /home/game-server/igetit41-docker-game-server/*.sh
     sudo cp /home/game-server/igetit41-docker-game-server/game-server/game-server.service /etc/systemd/system/game-server.service
 
     echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
     sudo systemctl restart game-server
+
+    until [ "`sudo docker inspect -f {{.State.Running}} game-server`"=="true" ]; do
+        sleep 0.1;
+    done;
+
+    sudo docker exec -it game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz"
+    sudo docker exec -it game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz
     
     while true; do
         echo "-----startup-script-output-server-creating"
