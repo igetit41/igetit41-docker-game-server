@@ -9,7 +9,7 @@ echo "-----startup-script-output-begin"
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml ps
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
 
-export RCON_PW=$('curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google"')
+export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
 
 # Changes Section - Unique to Each Game
 #export SERVER_PORT=15636 # Enshrouded
@@ -122,15 +122,15 @@ else
     done;
 
     sudo docker exec -it game-server ls
-    echo (sudo docker exec -it game-server ls)
+    echo $(sudo docker exec -it game-server ls)
     echo "-----startup-script-output-dockering-1"
     echo $(sudo docker exec -it game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
     sudo docker exec -it game-server ls
-    echo (sudo docker exec -it game-server ls)
+    echo $(sudo docker exec -it game-server ls)
     echo "-----startup-script-output-dockering-2"
     echo $(sudo docker exec -it game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
     sudo docker exec -it game-server ls
-    echo (sudo docker exec -it game-server ls)
+    echo $(sudo docker exec -it game-server ls)
     echo "-----startup-script-output-dockering-3"
     
     while true; do
