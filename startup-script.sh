@@ -9,10 +9,6 @@ echo "-----startup-script-output-begin"
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml ps
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
 
-
-echo "-----startup-script-output-get-RCON_PW"
-export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
-
 # Changes Section - Unique to Each Game
 #export SERVER_PORT=15636 # Enshrouded
 #export SERVER_PORT=25565 # Minecraft
@@ -58,7 +54,7 @@ if [ -d /home/game-server/igetit41-docker-game-server ]; then
             echo $SERVER_CHECK2
             
             if [[ "$SERVER_CHECK2" == /home* ]]; then
-                echo "-----startup-script-output-dockering"
+                echo "-----startup-script-output-rcon-startup"
                 WAITING_FOR_CONTAINER=false
                 
                 sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
