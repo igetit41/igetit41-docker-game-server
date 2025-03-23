@@ -89,11 +89,20 @@ while $WAITING_FOR_CONTAINER; do
     if [[ "$SERVER_CHECK1" == "game-server" ]]; then
         echo "-----startup-script-output-waiting-for-server2"
         
-        SERVER_CHECK2=$(sudo docker exec -i game-server ls)
+        SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
         echo $SERVER_CHECK2
         
-        if [[ "$SERVER_CHECK2" == *rcon* ]]; then
+        if [[ "$SERVER_CHECK2" == /home* ]]; then
             WAITING_FOR_CONTAINER=false
+
+            RCON_CHECK=$(sudo docker exec -i game-server ls | grep rcon)
+            echo $RCON_CHECK
+            
+            if [[ "$RCON_CHECK" != *rcon* ]]; then
+                echo "-----startup-script-output-installing-rcon"
+                echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+                echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+            fi
             
             echo "-----startup-script-output-rcon-startup"
             sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
