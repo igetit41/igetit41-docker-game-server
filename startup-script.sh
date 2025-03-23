@@ -12,7 +12,6 @@ echo "-----startup-script-output-begin"
 
 echo "-----startup-script-output-get-RCON_PW"
 export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
-echo $RCON_PW
 
 # Changes Section - Unique to Each Game
 #export SERVER_PORT=15636 # Enshrouded
@@ -69,6 +68,7 @@ if [ -d /home/game-server/igetit41-docker-game-server ]; then
 
     # Main loop
     while true; do
+        echo "-----startup-script-output-player-check"
         PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
         STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
         echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
