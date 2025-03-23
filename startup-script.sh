@@ -23,24 +23,7 @@ IDLE_COUNT=15
 # Count Idle Intervals
 COUNT=0
 
-if [ -d /home/game-server/igetit41-docker-game-server ]; then
-    echo "-----startup-script-output-pull-origin"
-    cd /home/game-server
-
-    sudo systemctl daemon-reload
-    sudo systemctl stop game-server
-
-    sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server reset --hard'
-    sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server pull origin main'
-
-    sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/*.sh
-    sudo chmod +x /home/game-server/igetit41-docker-game-server/*.sh
-    sudo cp /home/game-server/igetit41-docker-game-server/game-server/game-server.service /etc/systemd/system/game-server.service
-
-    echo "-----startup-script-output-start-server"
-    sudo systemctl daemon-reload
-    sudo systemctl restart game-server
-else
+if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-first-run"
     export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
 
