@@ -124,12 +124,16 @@ else
     while $WAITING_FOR_CONTAINER; do
         echo "-----startup-script-output-waiting-for-server"
         sleep 10;
-        SERVER_CHECK1=$(sudo docker ps | grep game-server)
+
+        SERVER_CHECK1=$(sudo docker ps | grep game-server | awk '{print $NF}')
         echo $SERVER_CHECK1
-        if [[ $SERVER_CHECK1 =~ "game-server" ]]; then
+        
+        if [[ "$SERVER_CHECK1" == "game-server" ]]; then
+            
             SERVER_CHECK2=$(sudo docker exec -it game-server pwd)
             echo $SERVER_CHECK2
-            if [[ $SERVER_CHECK2 =~ "/home" ]]; then
+            
+            if [[ "$SERVER_CHECK2" == /home* ]]; then
                 echo "-----startup-script-output-done-waiting"
                 WAITING_FOR_CONTAINER=false
 
