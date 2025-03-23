@@ -27,6 +27,9 @@ if [ -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-pull-origin"
     cd /home/game-server
 
+    sudo systemctl daemon-reload
+    sudo systemctl stop game-server
+
     sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server reset --hard'
     sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server pull origin main'
 
@@ -37,54 +40,6 @@ if [ -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
     sudo systemctl restart game-server
-
-    WAITING_FOR_CONTAINER=true
-
-    while $WAITING_FOR_CONTAINER; do
-        echo "-----startup-script-output-waiting-for-server1"
-        sleep 10;
-
-        SERVER_CHECK1=$(sudo docker ps | grep game-server | awk '{print $NF}')
-        echo $SERVER_CHECK1
-        
-        if [[ "$SERVER_CHECK1" == "game-server" ]]; then
-            echo "-----startup-script-output-waiting-for-server2"
-            
-            SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
-            echo $SERVER_CHECK2
-            
-            if [[ "$SERVER_CHECK2" == /home* ]]; then
-                echo "-----startup-script-output-rcon-startup"
-                WAITING_FOR_CONTAINER=false
-                
-                sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
-            fi
-        fi
-    done
-
-    # Main loop
-    while true; do
-        echo "-----startup-script-output-player-check"
-        PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
-        STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
-        echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
-
-        if [ $PLAYERS -gt 0 ]; then
-            COUNT=0
-        else
-            COUNT=$(expr $COUNT + 1)
-        fi
-        echo "-----startup-script-output-$STAMP-COUNT: $COUNT"
-        
-        if [ $COUNT -gt $IDLE_COUNT ]; then
-            echo "-----startup-script-output-$STAMP-shutting-down"
-            sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
-            sudo poweroff
-            break
-        fi
-
-        sleep $CHECK_INTERVAL
-    done
 else
     echo "-----startup-script-output-first-run"
     export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
@@ -137,34 +92,57 @@ else
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
     sudo systemctl restart game-server
-
-    WAITING_FOR_CONTAINER=true
-
-    while $WAITING_FOR_CONTAINER; do
-        echo "-----startup-script-output-waiting-for-server1"
-        sleep 10;
-
-        SERVER_CHECK1=$(sudo docker ps | grep game-server | awk '{print $NF}')
-        echo $SERVER_CHECK1
-        
-        if [[ "$SERVER_CHECK1" == "game-server" ]]; then
-            echo "-----startup-script-output-waiting-for-server2"
-            
-            SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
-            echo $SERVER_CHECK2
-            
-            if [[ "$SERVER_CHECK2" == /home* ]]; then
-                echo "-----startup-script-output-dockering"
-                WAITING_FOR_CONTAINER=false
-                
-                echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-                echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
-            fi
-        fi
-    done
-    
-    while true; do
-        echo "-----startup-script-output-script-finished"
-        sleep $CHECK_INTERVAL
-    done
 fi
+
+WAITING_FOR_CONTAINER=true
+
+while $WAITING_FOR_CONTAINER; do
+    echo "-----startup-script-output-waiting-for-server1"
+    sleep 10;
+
+    SERVER_CHECK1=$(sudo docker ps | grep game-server | awk '{print $NF}')
+    echo $SERVER_CHECK1
+    
+    if [[ "$SERVER_CHECK1" == "game-server" ]]; then
+        echo "-----startup-script-output-waiting-for-server2"
+        
+        SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
+        echo $SERVER_CHECK2
+        
+        if [[ "$SERVER_CHECK2" == /home* ]]; then
+            echo "-----startup-script-output-dockering"
+            WAITING_FOR_CONTAINER=false
+            
+            echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+            echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+            
+            echo "-----startup-script-output-rcon-startup"
+            
+            sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
+        fi
+    fi
+done
+
+# Main loop
+while true; do
+    echo "-----startup-script-output-player-check"
+    PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
+    STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
+    echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
+
+    if [ $PLAYERS -gt 0 ]; then
+        COUNT=0
+    else
+        COUNT=$(expr $COUNT + 1)
+    fi
+    echo "-----startup-script-output-$STAMP-COUNT: $COUNT"
+    
+    if [ $COUNT -gt $IDLE_COUNT ]; then
+        echo "-----startup-script-output-$STAMP-shutting-down"
+        sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
+        sudo poweroff
+        break
+    fi
+
+    sleep $CHECK_INTERVAL
+done
