@@ -87,6 +87,11 @@ if [ -d /home/game-server/igetit41-docker-game-server ]; then
     done
 else
     echo "-----startup-script-output-first-run"
+    export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
+
+    echo -e "\n" >> ~/.bashrc
+    echo "export RCON_PW=$RCON_PW" >> ~/.bashrc
+    echo -e "\n" >> ~/.bashrc
 
     sudo apt update -y
     sudo apt install net-tools
