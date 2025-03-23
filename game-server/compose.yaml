@@ -30,4 +30,4 @@ services:
     volumes:
       - ./data:/home/steam/Zomboid
       - ./workshop-mods:/home/steam/pz-dedicated/steamapps/workshop
-    command: bash -c 'curl -c x -L --insecure --output /home/steam/rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz" && tar -xvzf rcon-0.10.3-amd64_linux.tar.gz -C /home/steam'
+    command: ["bash", "-c", "sleep 20 && curl -c x -L --insecure --output /home/steam/rcon-0.10.3-amd64_linux.tar.gz 'https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz' && tar -xvzf rcon-0.10.3-amd64_linux.tar.gz -C /home/steam"]
