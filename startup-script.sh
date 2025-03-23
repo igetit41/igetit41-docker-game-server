@@ -116,8 +116,12 @@ while true; do
     PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
+    
+    if ! [[ $PLAYERS =~ ^[0-9]+$ ]]; then
+        PLAYERS=0
+    fi
 
-    if [ $PLAYERS -gt 0 ]; then
+    if [[ $PLAYERS -gt "0" ]]; then
         COUNT=0
     else
         COUNT=$(expr $COUNT + 1)
