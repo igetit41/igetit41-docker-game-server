@@ -122,15 +122,16 @@ else
     WAITING_FOR_CONTAINER=true
 
     while $WAITING_FOR_CONTAINER; do
-        echo "-----startup-script-output-waiting-for-server"
+        echo "-----startup-script-output-waiting-for-server1"
         sleep 10;
 
         SERVER_CHECK1=$(sudo docker ps | grep game-server | awk '{print $NF}')
         echo $SERVER_CHECK1
         
         if [[ "$SERVER_CHECK1" == "game-server" ]]; then
+            echo "-----startup-script-output-waiting-for-server2"
             
-            SERVER_CHECK2=$(sudo docker exec -it game-server pwd)
+            SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
             echo $SERVER_CHECK2
             
             if [[ "$SERVER_CHECK2" == /home* ]]; then
@@ -138,27 +139,27 @@ else
                 WAITING_FOR_CONTAINER=false
 
                 echo "-----startup-script-output-dockering-1"
-                sudo docker exec -it game-server ls
+                sudo docker exec -i game-server ls
 
                 echo "-----startup-script-output-dockering-2"
-                echo $(sudo docker exec -it game-server ls)
+                echo $(sudo docker exec -i game-server ls)
 
                 echo "-----startup-script-output-dockering-3"
-                sudo docker exec -it game-server mkdir testdir1
+                sudo docker exec -i game-server mkdir testdir1
 
                 echo "-----startup-script-output-dockering-4"
-                echo $(sudo docker exec -it game-server mkdir testdir2)
+                echo $(sudo docker exec -i game-server mkdir testdir2)
 
                 echo "-----startup-script-output-dockering-5"
-                DOCKER_OP=$(sudo docker exec -it game-server mkdir testdir3)
+                DOCKER_OP=$(sudo docker exec -i game-server mkdir testdir3)
                 echo $DOCKER_OP
 
 
                 echo "-----startup-script-output-dockering-6"
-                echo $(sudo docker exec -it game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+                echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
 
                 echo "-----startup-script-output-dockering-7"
-                echo $(sudo docker exec -it game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+                echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
             fi
         fi
     done
