@@ -25,7 +25,7 @@ COUNT=0
 
 if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-first-run"
-    RCON_PW=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
+    echo export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
 
     echo -e "\n" >> ~/.bashrc
     echo "export RCON_PW=$RCON_PW" >> ~/.bashrc
