@@ -103,6 +103,8 @@ while $WAITING_FOR_CONTAINER; do
                 echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
                 echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
 
+                echo $(sudo docker exec -i game-server ls)
+                echo $(sudo docker exec -i game-server pwd)
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
                 echo $(sudo docker exec -i game-server sed -i '/RCON/d' ./Zomboid/Server/channel27.ini)
                 echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
