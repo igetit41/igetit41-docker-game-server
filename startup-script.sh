@@ -25,7 +25,7 @@ COUNT=0
 
 if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-first-run"
-    RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
+    RCON_PW=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
 
     echo -e "\n" >> ~/.bashrc
     echo "export RCON_PW=$RCON_PW" >> ~/.bashrc
@@ -105,8 +105,7 @@ while $WAITING_FOR_CONTAINER; do
             fi
             
             echo "-----startup-script-output-rcon-startup"
-            #sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
-            sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin
+            sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
         fi
     fi
 done
@@ -114,9 +113,7 @@ done
 # Main loop
 while true; do
     echo "-----startup-script-output-player-check"
-    #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
-    
-    PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW players | grep -Eo '[0-9]+' | head -1)
+    PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
 
