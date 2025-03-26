@@ -93,17 +93,24 @@ while $WAITING_FOR_CONTAINER; do
         echo $SERVER_CHECK2
         
         if [[ "$SERVER_CHECK2" == /home* ]]; then
+            echo "-----startup-script-output-waiting-for-server3"
         
             SERVER_CHECK3=$(sudo docker exec -i game-server ls ./Zomboid/Server)
             echo $SERVER_CHECK3
 
             if [[ "$SERVER_CHECK3" == *channel27.ini* ]]; then
+                echo "-----startup-script-output-waiting-for-server4"
+                sleep 10
 
-                RCON_CHECK=$(sudo docker exec -i game-server ls | grep rcon)
+                RCON_CHECK=$(sudo docker exec -i game-server ls)
                 echo $RCON_CHECK
                 
                 if [[ "$RCON_CHECK" != *rcon* ]]; then
                     WAITING_FOR_CONTAINER=false
+
+                    echo "-----startup-script-output-installing-rcon"
+                    echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+                    echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
                     
                     echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
                     echo $(sudo docker exec -i game-server sed -i '/RCON/d' ./Zomboid/Server/channel27.ini)
@@ -113,10 +120,6 @@ while $WAITING_FOR_CONTAINER; do
                     echo $(sudo docker exec -i game-server echo "RCONPassword=$RCON_PW" >> ./Zomboid/Server/channel27.ini)
                     echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
                     echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
-
-                    echo "-----startup-script-output-installing-rcon"
-                    echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-                    echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
                 fi
             fi
             
