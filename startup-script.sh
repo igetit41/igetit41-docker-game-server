@@ -25,7 +25,7 @@ COUNT=0
 
 if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-first-run"
-    export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
+    echo export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
 
     echo -e "\n" >> ~/.bashrc
     echo "export RCON_PW=$RCON_PW" >> ~/.bashrc
@@ -116,7 +116,7 @@ while true; do
     PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
-    
+
     if ! [[ $PLAYERS =~ ^[0-9]+$ ]]; then
         PLAYERS=0
     fi
