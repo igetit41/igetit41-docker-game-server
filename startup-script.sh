@@ -104,7 +104,11 @@ while $WAITING_FOR_CONTAINER; do
                 echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
 
                 echo $(sudo docker exec -i game-server ls)
-                echo $(sudo docker exec -i game-server pwd)
+                PWD=$(sudo docker exec -i game-server pwd)
+                echo $(sudo docker exec -i game-server ls ./Zomboid)
+                echo $(sudo docker exec -i game-server ls ./Zomboid/Server)
+                echo $(sudo docker exec -i game-server ls $PWD/Zomboid)
+                echo $(sudo docker exec -i game-server ls $PWD/Zomboid/Server)
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
                 echo $(sudo docker exec -i game-server sed -i '/RCON/d' ./Zomboid/Server/channel27.ini)
                 echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
