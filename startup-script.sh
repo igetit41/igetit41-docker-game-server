@@ -103,12 +103,14 @@ while $WAITING_FOR_CONTAINER; do
                 echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
                 echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
 
+                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
                 echo $(sudo docker exec -i game-server sed -i '/RCON/d' ./Zomboid/Server/channel27.ini)
                 echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
                 echo $(sudo docker exec -i game-server echo "RCONPort=27015" >> ./Zomboid/Server/channel27.ini)
                 echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
                 echo $(sudo docker exec -i game-server echo "RCONPassword=$RCON_PW" >> ./Zomboid/Server/channel27.ini)
                 echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
+                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
             fi
             
             echo "-----startup-script-output-rcon-startup"
@@ -120,6 +122,7 @@ done
 # Main loop
 while true; do
     echo "-----startup-script-output-player-check"
+    echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
     PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
