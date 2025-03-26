@@ -108,18 +108,24 @@ while $WAITING_FOR_CONTAINER; do
                 if [[ "$RCON_CHECK" != *rcon* ]]; then
                     WAITING_FOR_CONTAINER=false
 
-                    echo "-----startup-script-output-installing-rcon"
+                    echo "-----startup-script-output-installing-rcon1"
                     echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+                    echo "-----startup-script-output-installing-rcon2"
                     echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+                    echo "-----startup-script-output-installing-rcon3"
                     
                     echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
-                    echo $(sudo docker exec -i game-server sed -i '/RCON/d' ./Zomboid/Server/channel27.ini)
-                    echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
-                    echo $(sudo docker exec -i game-server echo "RCONPort=27015" >> ./Zomboid/Server/channel27.ini)
-                    echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
-                    echo $(sudo docker exec -i game-server echo "RCONPassword=$RCON_PW" >> ./Zomboid/Server/channel27.ini)
-                    echo $(sudo docker exec -i game-server echo -e "\n" >> ./Zomboid/Server/channel27.ini)
+                    echo "-----startup-script-output-installing-rcon4"
+                    echo $(sudo docker exec -i game-server sed -i '/RCONPassword=/d' ./Zomboid/Server/channel27.ini)
+                    echo "-----startup-script-output-installing-rcon5"
+                    echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "\n")
+                    echo "-----startup-script-output-installing-rcon6"
+                    echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "RCONPassword=$RCON_PW")
+                    echo "-----startup-script-output-installing-rcon7"
+                    echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "\n")
+                    echo "-----startup-script-output-installing-rcon8"
                     echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
+                    echo "-----startup-script-output-installing-rcon9"
                 fi
             fi
             
