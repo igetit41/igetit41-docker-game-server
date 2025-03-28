@@ -81,7 +81,8 @@ WAITING_FOR_CONTAINER=true
 WAITING_FOR_CONTAINER1=true
 WAITING_FOR_CONTAINER2=true
 
-while $WAITING_FOR_CONTAINER; do
+while $WAITING_FOR_CONTAINER
+do
     echo "-----startup-script-output-waiting-for-server1"
     sleep 10;
 
@@ -141,7 +142,8 @@ while $WAITING_FOR_CONTAINER; do
 done
 
 # Main loop
-while true; do
+while true
+do
     echo "-----startup-script-output-player-check"
     echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
     #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
