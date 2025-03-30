@@ -4,8 +4,8 @@ services:
     # Changes Section - Unique to Each Game
     # Project Zomboid 
     image: danixu86/project-zomboid-dedicated-server:latest
-    restart: unless-stopped
-    #restart: always
+    #restart: unless-stopped
+    restart: always
     container_name: game-server
     network_mode: "host"
     ports:
