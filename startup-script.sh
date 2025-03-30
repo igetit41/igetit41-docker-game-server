@@ -23,6 +23,8 @@ IDLE_COUNT=15
 # Count Idle Intervals
 COUNT=0
 
+RUN_COUNT=0
+
 if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-first-run"
     export RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
@@ -75,69 +77,66 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
     sudo systemctl restart game-server
+else
+    RUN_COUNT=$RUN_COUNT+1
+
 fi
 
-WAITING_FOR_CONTAINER=true
-WAITING_FOR_CONTAINER1=true
-WAITING_FOR_CONTAINER2=true
+PASSWORD_CHECK=initial
+RCON_CHECK=initial
+RCON_STARTUP=initial
 
-while $WAITING_FOR_CONTAINER
+while [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" != *rcon* ]] && [[ "$RCON_STARTUP" != "done" ]]
 do
-    echo "-----startup-script-output-waiting-for-server1"
-    sleep 10;
+    echo "-----startup-script-output-waiting-for-server"
 
     SERVER_CHECK1=$(sudo docker ps | grep game-server | awk '{print $NF}')
     echo $SERVER_CHECK1
+    SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
+    echo $SERVER_CHECK2
     
-    if [[ "$SERVER_CHECK1" == "game-server" ]]; then
+    if [[ "$SERVER_CHECK1" == "game-server" ]] && [[ "$SERVER_CHECK2" == /home* ]]; then
         echo "-----startup-script-output-waiting-for-server2"
-        
-        SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
-        echo $SERVER_CHECK2
-        
-        if [[ "$SERVER_CHECK2" == /home* ]]; then
-            echo "-----startup-script-output-waiting-for-server3"
-        
-            PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
-            echo $PASSWORD_CHECK
+    
+        PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
+        echo $PASSWORD_CHECK
 
-            if [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]]; then
-                WAITING_FOR_CONTAINER1=false
-                echo "-----startup-script-output-set-rcon-password"
-                    
-                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
-                echo "-----startup-script-output-set-rcon-password"
-                echo $(sudo docker exec -i game-server sed -i '/RCONPassword=/d' ./Zomboid/Server/channel27.ini)
-                echo "-----startup-script-output-set-rcon-password"
-                echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "\n")
-                echo "-----startup-script-output-set-rcon-password"
-                echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "RCONPassword=$RCON_PW")
-                echo "-----startup-script-output-set-rcon-password"
-                echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "\n")
-                echo "-----startup-script-output-set-rcon-password"
-                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
-                echo "-----startup-script-output-set-rcon-password"
-            else
+        if [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]]; then
+            echo "-----startup-script-output-set-rcon-password1"
+                
+            echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
+            echo "-----startup-script-output-set-rcon-password2"
+            echo $(sudo docker exec -i game-server sed -i '/RCONPassword=/d' ./Zomboid/Server/channel27.ini)
+            echo "-----startup-script-output-set-rcon-password3"
+            echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "\n")
+            echo "-----startup-script-output-set-rcon-password4"
+            echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "RCONPassword=$RCON_PW")
+            echo "-----startup-script-output-set-rcon-password5"
+            echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "\n")
+            echo "-----startup-script-output-set-rcon-password6"
+            echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
+            echo "-----startup-script-output-set-rcon-password7"
+        else
 
-            RCON_CHECK=$(sudo docker exec -i game-server ls)
-            echo $RCON_CHECK
-            
-            if [[ "$RCON_CHECK" != *rcon* ]]; then
-                WAITING_FOR_CONTAINER2=false
-                echo "-----startup-script-output-installing-rcon1"
-                echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-                echo "-----startup-script-output-installing-rcon2"
-                echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
-            else
+        RCON_CHECK=$(sudo docker exec -i game-server ls)
+        echo $RCON_CHECK
+        
+        if [[ "$RCON_CHECK" != *rcon* ]]; then
+            echo "-----startup-script-output-installing-rcon1"
+            echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+            echo "-----startup-script-output-installing-rcon2"
+            echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+            echo "-----startup-script-output-installing-rcon3"
+        else
 
-            if ! $WAITING_FOR_CONTAINER1 && ! $WAITING_FOR_CONTAINER2; then
-                WAITING_FOR_CONTAINER=false
-            fi
-            
+        if [[ "$PASSWORD_CHECK" == "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" == *rcon* ]]; then
+            RCON_STARTUP=done
+        
             echo "-----startup-script-output-rcon-startup"
             #sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
             echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin)
         fi
+
     fi
 done
 
