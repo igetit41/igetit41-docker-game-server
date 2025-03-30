@@ -131,30 +131,22 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
                 echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
 
-                RESTART_COUNT=0
-                while [[ "$RCON_STARTUP" == "" ]]; do
+                RESTART_COUNT=3
+                while [[ $RESTART_COUNT -gt "0" ]]; do
                     echo "-----startup-script-output-game-server-restart"
                     #RESTART_OUTPUT=$(sudo systemctl restart game-server)
                     RESTART_OUTPUT=$(sudo docker restart game-server)
-
-                    RESTART_COUNT="$(($RESTART_COUNT + 1))"
+                    RESTART_COUNT="$(($RESTART_COUNT - 1))"
                     echo "-----startup-script-output-RESTART_COUNT-$RESTART_COUNT"
                     echo "-----startup-script-output-RCON_STARTUP-$RESTART_OUTPUT"
-                    
-                    #echo "-----startup-script-output-sleep2-3x$CHECK_INTERVAL"
-                    #sleep $CHECK_INTERVAL
-                    #sleep $CHECK_INTERVAL
-                    #sleep $CHECK_INTERVAL
 
+                    LOOP_VAR=0
                     while [[ "$RCON_STARTUP" == "" ]]; do
+                        LOOP_VAR="$(($LOOP_VAR + 1))"
+                        echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR"
+
                         echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
                         sleep $CHECK_INTERVAL
-
-                        PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
-                        echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
-
-                        RCON_CHECK=$(sudo docker exec -i game-server ls)
-                        echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
                     
                         echo "-----startup-script-output-rcon-startup2"
                         RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
@@ -168,10 +160,6 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
             fi
         fi
 
-        echo "-----startup-script-output-SERVER_CHECK1-$SERVER_CHECK1"
-        echo "-----startup-script-output-SERVER_CHECK2-$SERVER_CHECK2"
-        echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
-        echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
         echo "-----startup-script-output-sleep1-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
     done
