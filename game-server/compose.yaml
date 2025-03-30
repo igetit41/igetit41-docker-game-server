@@ -5,6 +5,7 @@ services:
     # Project Zomboid 
     image: danixu86/project-zomboid-dedicated-server:latest
     restart: unless-stopped
+    #restart: always
     container_name: game-server
     network_mode: "host"
     ports:
