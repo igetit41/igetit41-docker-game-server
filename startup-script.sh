@@ -129,13 +129,14 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
 
             if [[ "$PASSWORD_CHECK" == "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" == *rcon* ]]; then
                 echo "-----startup-script-output-rcon-startup1"
-                RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin && echo $?)
+                RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin)
                 echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
 
                 RESTART_COUNT=0
                 while [[ "$RCON_STARTUP" == "" ]]; do
                     echo "-----startup-script-output-game-server-restart"
                     RESTART_OUTPUT=$(sudo systemctl restart game-server)
+                    #RESTART_OUTPUT=$(sudo docker restart game-server)
 
                     RESTART_COUNT="$(($RESTART_COUNT + 1))"
                     echo "-----startup-script-output-RESTART_COUNT-$RESTART_COUNT"
@@ -145,7 +146,7 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                     sleep $CHECK_INTERVAL
                     
                     echo "-----startup-script-output-rcon-startup2"
-                    RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin && echo $?)
+                    RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin)
                     echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
                 done
             fi
