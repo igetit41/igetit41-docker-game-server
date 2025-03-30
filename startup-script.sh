@@ -147,7 +147,12 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                     RCON_CHECK=$(sudo docker exec -i game-server ls)
                     echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
 
-                    while [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" != *rcon* ]]; do
+                    echo "-----startup-script-output-sleep2-3x$CHECK_INTERVAL"
+                    sleep $CHECK_INTERVAL
+                    sleep $CHECK_INTERVAL
+                    sleep $CHECK_INTERVAL
+
+                    while [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" != *rcon* ]] && [[ "$RCON_STARTUP" == "" ]]; do
                         echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
                         sleep $CHECK_INTERVAL
 
@@ -156,11 +161,11 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
 
                         RCON_CHECK=$(sudo docker exec -i game-server ls)
                         echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
-                    done
                     
-                    echo "-----startup-script-output-rcon-startup2"
-                    RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
-                    echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
+                        echo "-----startup-script-output-rcon-startup2"
+                        RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
+                        echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
+                    done
                 done
                     
                 echo "-----startup-script-output-rcon-startup3"
