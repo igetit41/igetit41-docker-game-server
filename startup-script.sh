@@ -132,13 +132,23 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
 
                 RESTART_COUNT=3
+                echo "-----startup-script-output-RESTART_COUNT-$RESTART_COUNT"
+
                 while [[ $RESTART_COUNT -gt "0" ]]; do
                     echo "-----startup-script-output-game-server-restart"
                     #RESTART_OUTPUT=$(sudo systemctl restart game-server)
                     RESTART_OUTPUT=$(sudo docker restart game-server)
+
                     RESTART_COUNT="$(($RESTART_COUNT - 1))"
                     echo "-----startup-script-output-RESTART_COUNT-$RESTART_COUNT"
                     echo "-----startup-script-output-RCON_STARTUP-$RESTART_OUTPUT"
+
+                    
+                    
+                    echo "-----startup-script-output-rcon-startup2"
+                    RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
+                    echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
+                    
 
                     LOOP_VAR=0
                     while [[ "$RCON_STARTUP" == "" ]]; do
