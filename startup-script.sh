@@ -99,12 +99,12 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 echo "-----startup-script-output-set-rcon-password1"
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword)
                 echo "-----startup-script-output-set-rcon-password2"
-                echo $(sudo docker exec -i game-server sed "s/RCONPassword=/RCONPassword=$RCON_PW/" ./Zomboid/Server/channel27.ini)
+                echo $(sudo docker exec -i game-server sed -i "s/RCONPassword=/RCONPassword=$RCON_PW/g" ./Zomboid/Server/channel27.ini)
                 echo "-----startup-script-output-set-rcon-password3"
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword)
                 echo "-----startup-script-output-set-rcon-password4"  
         
-                PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
+                PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword)
                 echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
             fi
             
@@ -164,7 +164,7 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 echo "-----startup-script-output-set-starting-points1"
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep CharacterFreePoints)
                 echo "-----startup-script-output-set-starting-points2"
-                echo $(sudo docker exec -i game-server sed "s/    CharacterFreePoints = 0,/    CharacterFreePoints = 4,/" ./Zomboid/Server/channel27_SandboxVars.lua)
+                echo $(sudo docker exec -i game-server sed -i "s/    CharacterFreePoints = 0,/    CharacterFreePoints = 4,/g" ./Zomboid/Server/channel27_SandboxVars.lua)
                 echo "-----startup-script-output-set-starting-points3"
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep CharacterFreePoints)
                 echo "-----startup-script-output-set-starting-points4"
@@ -172,7 +172,7 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 echo "-----startup-script-output-set-starter-kit1"
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep StarterKit)
                 echo "-----startup-script-output-set-starter-kit2"
-                echo $(sudo docker exec -i game-server sed "s/    StarterKit = false,/    StarterKit = true,/" ./Zomboid/Server/channel27_SandboxVars.lua)
+                echo $(sudo docker exec -i game-server sed -i "s/    StarterKit = false,/    StarterKit = true,/g" ./Zomboid/Server/channel27_SandboxVars.lua)
                 echo "-----startup-script-output-set-starter-kit3"
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep StarterKit)
                 echo "-----startup-script-output-set-starter-kit4"
