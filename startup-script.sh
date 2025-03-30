@@ -143,7 +143,9 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                     echo "-----startup-script-output-RESTART_COUNT-$RESTART_COUNT"
                     echo "-----startup-script-output-RCON_STARTUP-$RESTART_OUTPUT"
 
-                    
+                    echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
+                    sleep $CHECK_INTERVAL
+
                     
                     echo "-----startup-script-output-rcon-startup2"
                     RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
