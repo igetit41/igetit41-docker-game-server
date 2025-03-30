@@ -116,7 +116,7 @@ do
             echo "-----startup-script-output-set-rcon-password6"
             echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
             echo "-----startup-script-output-set-rcon-password7"
-        else
+        fi
 
         RCON_CHECK=$(sudo docker exec -i game-server ls)
         echo $RCON_CHECK
@@ -127,7 +127,7 @@ do
             echo "-----startup-script-output-installing-rcon2"
             echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
             echo "-----startup-script-output-installing-rcon3"
-        else
+        fi
 
         if [[ "$PASSWORD_CHECK" == "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" == *rcon* ]]; then
             RCON_STARTUP=done
