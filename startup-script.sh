@@ -97,19 +97,12 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
 
             if [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]]; then
                 echo "-----startup-script-output-set-rcon-password1"
-                    
-                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
+                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword)
                 echo "-----startup-script-output-set-rcon-password2"
-                echo $(sudo docker exec -i game-server sed -i '/RCONPassword=/d' ./Zomboid/Server/channel27.ini)
+                echo $(sudo docker exec -i game-server sed "s/RCONPassword=/RCONPassword=$RCON_PW/" ./Zomboid/Server/channel27.ini)
                 echo "-----startup-script-output-set-rcon-password3"
-                echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "\n")
-                echo "-----startup-script-output-set-rcon-password4"
-                echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "RCONPassword=$RCON_PW")
-                echo "-----startup-script-output-set-rcon-password5"
-                echo $(sudo docker exec -i game-server tee -a ./Zomboid/Server/channel27.ini <<< "\n")
-                echo "-----startup-script-output-set-rcon-password6"
-                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
-                echo "-----startup-script-output-set-rcon-password7"    
+                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword)
+                echo "-----startup-script-output-set-rcon-password4"  
         
                 PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
                 echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
@@ -145,13 +138,11 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
 
                     echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
                     sleep $CHECK_INTERVAL
-
                     
                     echo "-----startup-script-output-rcon-startup2"
                     RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
                     echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
                     
-
                     LOOP_VAR=0
                     while [[ "$RCON_STARTUP" == "" ]]; do
                         LOOP_VAR="$(($LOOP_VAR + 1))"
@@ -169,6 +160,22 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 echo "-----startup-script-output-rcon-startup3"
                 RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "setaccesslevel D3F1L3 admin")
                 echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
+                
+                echo "-----startup-script-output-set-starting-points1"
+                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep CharacterFreePoints)
+                echo "-----startup-script-output-set-starting-points2"
+                echo $(sudo docker exec -i game-server sed "s/    CharacterFreePoints = 0,/    CharacterFreePoints = 4,/" ./Zomboid/Server/channel27_SandboxVars.lua)
+                echo "-----startup-script-output-set-starting-points3"
+                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep CharacterFreePoints)
+                echo "-----startup-script-output-set-starting-points4"
+                
+                echo "-----startup-script-output-set-starter-kit1"
+                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep StarterKit)
+                echo "-----startup-script-output-set-starter-kit2"
+                echo $(sudo docker exec -i game-server sed "s/    StarterKit = false,/    StarterKit = true,/" ./Zomboid/Server/channel27_SandboxVars.lua)
+                echo "-----startup-script-output-set-starter-kit3"
+                echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep StarterKit)
+                echo "-----startup-script-output-set-starter-kit4"
             fi
         fi
 
@@ -176,6 +183,24 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
         sleep $CHECK_INTERVAL
     done
 fi
+
+echo "-----startup-script-output-rcon-startup2"
+RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
+echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
+
+
+LOOP_VAR=0
+while [[ "$RCON_STARTUP" == "" ]]; do
+    LOOP_VAR="$(($LOOP_VAR + 1))"
+    echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR"
+
+    echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
+    sleep $CHECK_INTERVAL
+
+    echo "-----startup-script-output-rcon-startup2"
+    RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
+    echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
+done
 
 # Main loop
 while true; do
