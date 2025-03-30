@@ -129,7 +129,7 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
 
             if [[ "$PASSWORD_CHECK" == "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" == *rcon* ]]; then
                 echo "-----startup-script-output-rcon-startup1"
-                RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin)
+                RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "setaccesslevel D3F1L3 admin")
                 echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
 
                 RESTART_COUNT=0
@@ -146,7 +146,7 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                     sleep $CHECK_INTERVAL
                     
                     echo "-----startup-script-output-rcon-startup2"
-                    RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin)
+                    RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "setaccesslevel D3F1L3 admin")
                     echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
                 done
             fi
@@ -167,7 +167,7 @@ do
     echo "-----startup-script-output-player-check"
     echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCON)
     #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
-    PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW players | grep -Eo '[0-9]+' | head -1)
+    PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "players" | grep -Eo '[0-9]+' | head -1)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
     
