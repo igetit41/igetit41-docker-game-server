@@ -176,6 +176,10 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 echo "-----startup-script-output-set-starter-kit3"
                 echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep StarterKit)
                 echo "-----startup-script-output-set-starter-kit4"
+                    
+                echo "-----startup-script-output-rcon-startup3"
+                RCON_STARTUP=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "reloadlua './Zomboid/Server/channel27_SandboxVars.lua'")
+                echo "-----startup-script-output-RCON_STARTUP-$RCON_STARTUP"
             fi
         fi
 
