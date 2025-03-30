@@ -89,6 +89,7 @@ RCON_STARTUP=initial
 while [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" != *rcon* ]] && [[ "$RCON_STARTUP" != "done" ]]
 do
     echo "-----startup-script-output-waiting-for-server"
+    RESTART_1=false
 
     SERVER_CHECK1=$(sudo docker ps | grep game-server | awk '{print $NF}')
     echo $SERVER_CHECK1
@@ -135,9 +136,27 @@ do
             echo "-----startup-script-output-rcon-startup"
             #sudo /home/game-server/igetit41-docker-game-server/rcon-startup.sh
             echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW setaccesslevel D3F1L3 admin)
+
+            RESTART_1=true
+        fi
+
+        if [[ "$RESTART_1" == "true" ]]; then
+            RCON_STARTUP=done
+
+            echo "-----startup-script-output-RESTART_1"
+            shutdown --reboot 1 "System rebooting in 1 minute"
+            sleep 90
         fi
 
     fi
+
+    echo "-----startup-script-output-SERVER_CHECK1-$SERVER_CHECK1"
+    echo "-----startup-script-output-SERVER_CHECK2-$SERVER_CHECK2"
+    echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
+    echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
+    echo "-----startup-script-output-RESTART_1-$RESTART_1"
+    echo "-----startup-script-output-sleep1-$CHECK_INTERVAL"
+    sleep $CHECK_INTERVAL
 done
 
 # Main loop
@@ -168,5 +187,6 @@ do
         break
     fi
 
+    echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
     sleep $CHECK_INTERVAL
 done
