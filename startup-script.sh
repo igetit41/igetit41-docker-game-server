@@ -141,18 +141,12 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                     echo "-----startup-script-output-RESTART_COUNT-$RESTART_COUNT"
                     echo "-----startup-script-output-RCON_STARTUP-$RESTART_OUTPUT"
                     
-                    PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
-                    echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
+                    #echo "-----startup-script-output-sleep2-3x$CHECK_INTERVAL"
+                    #sleep $CHECK_INTERVAL
+                    #sleep $CHECK_INTERVAL
+                    #sleep $CHECK_INTERVAL
 
-                    RCON_CHECK=$(sudo docker exec -i game-server ls)
-                    echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
-
-                    echo "-----startup-script-output-sleep2-3x$CHECK_INTERVAL"
-                    sleep $CHECK_INTERVAL
-                    sleep $CHECK_INTERVAL
-                    sleep $CHECK_INTERVAL
-
-                    while [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" != *rcon* ]] && [[ "$RCON_STARTUP" == "" ]]; do
+                    while [[ "$RCON_STARTUP" == "" ]]; do
                         echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
                         sleep $CHECK_INTERVAL
 
