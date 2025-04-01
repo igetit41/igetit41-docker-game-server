@@ -88,7 +88,7 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     while [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" != *rcon* ]] && [[ "$RCON_STARTUP" == "" ]]; do
         echo "-----startup-script-output-waiting-for-server"
         SERVER_CHECK1=$(sudo docker ps | grep game-server | awk '{print $NF}')
-        echo "-----startup-script-output-SERVER_CHECK2-$SERVER_CHECK1"
+        echo "-----startup-script-output-SERVER_CHECK1-$SERVER_CHECK1"
         SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
         echo "-----startup-script-output-SERVER_CHECK2-$SERVER_CHECK2"
         
@@ -108,16 +108,19 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
             fi
             
-            if [[ "$RCON_CHECK" != *rcon* ]]; then
-                echo "-----startup-script-output-installing-rcon1"
-                echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-                echo "-----startup-script-output-installing-rcon2"
-                echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
-                echo "-----startup-script-output-installing-rcon3"
+            #if [[ "$RCON_CHECK" != *rcon* ]]; then
+            #    echo "-----startup-script-output-installing-rcon1"
+            #    echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+            #    echo "-----startup-script-output-installing-rcon2"
+            #    echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+            #    echo "-----startup-script-output-installing-rcon3"
+            #    
+            #    RCON_CHECK=$(sudo docker exec -i game-server ls)
+            #    echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
+            #fi
                 
-                RCON_CHECK=$(sudo docker exec -i game-server ls)
-                echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
-            fi
+            RCON_CHECK=$(sudo docker exec -i game-server ls)
+            echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
 
             if [[ "$PASSWORD_CHECK" == "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" == *rcon* ]]; then
                 echo "-----startup-script-output-rcon-startup1"
