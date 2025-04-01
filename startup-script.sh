@@ -113,7 +113,7 @@ PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.
 
 while [[ "$INI_CHECK" == "" ]] && [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]]; do
 
-        if [[ "$INI_CHECK" == *channel27.ini* ]]
+        if [[ "$INI_CHECK" == *channel27.ini* ]]; then
             echo "-----startup-script-output-set-rcon-password"
             sudo docker exec -i game-server sed -i "s/RCONPassword=/RCONPassword=$RCON_PW/g" ./Zomboid/Server/channel27.ini
         else
