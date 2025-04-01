@@ -111,7 +111,7 @@ echo "-----startup-script-output-INI_CHECK-$INI_CHECK"
 PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
 #echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
 
-while [[ "$INI_CHECK" == "" ]] && [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]]; do
+while [[ "$INI_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]]; do
 
         if [[ "$INI_CHECK" == *channel27.ini* ]]; then
             echo "-----startup-script-output-set-rcon-password"
