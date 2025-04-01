@@ -105,21 +105,6 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword)
                 echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
             fi
-            
-            #while [[ "$RCON_CHECK" != *rcon* ]]; do
-            #    echo "-----startup-script-output-waiting-for-rcon1"
-            #    #echo "-----startup-script-output-installing-rcon1"
-            #    #echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-            #    #echo "-----startup-script-output-installing-rcon2"
-            #    #echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
-            #    #echo "-----startup-script-output-installing-rcon3"
-
-            #    echo "-----startup-script-output-sleep1-$CHECK_INTERVAL"
-            #    sleep $CHECK_INTERVAL
-            #    
-            #    RCON_CHECK=$(sudo docker exec -i game-server ls)
-            #    echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
-            #done
         fi
 
         echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
@@ -161,37 +146,22 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
             echo "-----startup-script-output-RCON_RUNNING-$RCON_RUNNING"
         done
     done
-        
-    echo "-----startup-script-output-rcon-startup3"
-    RCON_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "setaccesslevel D3F1L3 admin")
-    echo "-----startup-script-output-RCON_RUNNING-$RCON_RUNNING"
+
+    echo "-----startup-script-output-set-D3F1L3-admin1"
+    sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "setaccesslevel D3F1L3 admin"
     
     echo "-----startup-script-output-set-starting-points1"
-    echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep CharacterFreePoints)
-    echo "-----startup-script-output-set-starting-points2"
-    echo $(sudo docker exec -i game-server sed -i "s/    CharacterFreePoints = 0,/    CharacterFreePoints = 4,/g" ./Zomboid/Server/channel27_SandboxVars.lua)
-    echo "-----startup-script-output-set-starting-points3"
-    echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep CharacterFreePoints)
-    echo "-----startup-script-output-set-starting-points4"
+    sudo docker exec -i game-server sed -i "s/    CharacterFreePoints = 0,/    CharacterFreePoints = 4,/g" ./Zomboid/Server/channel27_SandboxVars.lua
     
     echo "-----startup-script-output-set-starter-kit1"
-    echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep StarterKit)
-    echo "-----startup-script-output-set-starter-kit2"
-    echo $(sudo docker exec -i game-server sed -i "s/    StarterKit = false,/    StarterKit = true,/g" ./Zomboid/Server/channel27_SandboxVars.lua)
-    echo "-----startup-script-output-set-starter-kit3"
-    echo $(sudo docker exec -i game-server cat ./Zomboid/Server/channel27_SandboxVars.lua | grep StarterKit)
-    echo "-----startup-script-output-set-starter-kit4"
-        
-    echo "-----startup-script-output-rcon-startup3"
-    RCON_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "reloadlua './Zomboid/Server/channel27_SandboxVars.lua'")
-    echo "-----startup-script-output-RCON_RUNNING-$RCON_RUNNING"
+    sudo docker exec -i game-server sed -i "s/    StarterKit = false,/    StarterKit = true,/g" ./Zomboid/Server/channel27_SandboxVars.lua
+
 
 fi
 
 echo "-----startup-script-output-rcon-startup2"
 RCON_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help")
 echo "-----startup-script-output-RCON_RUNNING-$RCON_RUNNING"
-
 
 LOOP_VAR=0
 while [[ "$RCON_RUNNING" == "" ]]; do
