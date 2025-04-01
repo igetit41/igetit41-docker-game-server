@@ -108,19 +108,20 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                 echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
             fi
             
-            #if [[ "$RCON_CHECK" != *rcon* ]]; then
-            #    echo "-----startup-script-output-installing-rcon1"
-            #    echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-            #    echo "-----startup-script-output-installing-rcon2"
-            #    echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
-            #    echo "-----startup-script-output-installing-rcon3"
-            #    
-            #    RCON_CHECK=$(sudo docker exec -i game-server ls)
-            #    echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
-            #fi
+            while [[ "$RCON_CHECK" != *rcon* ]]; do
+                echo "-----startup-script-output-waiting-for-rcon1"
+                #echo "-----startup-script-output-installing-rcon1"
+                #echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+                #echo "-----startup-script-output-installing-rcon2"
+                #echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+                #echo "-----startup-script-output-installing-rcon3"
+
+                echo "-----startup-script-output-sleep1-$CHECK_INTERVAL"
+                sleep $CHECK_INTERVAL
                 
-            RCON_CHECK=$(sudo docker exec -i game-server ls)
-            echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
+                RCON_CHECK=$(sudo docker exec -i game-server ls)
+                echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
+            done
 
             if [[ "$PASSWORD_CHECK" == "RCONPassword=$RCON_PW" ]] && [[ "$RCON_CHECK" == *rcon* ]]; then
                 echo "-----startup-script-output-rcon-startup1"
@@ -151,7 +152,7 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
                         LOOP_VAR="$(($LOOP_VAR + 1))"
                         echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR"
 
-                        echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
+                        echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
                         sleep $CHECK_INTERVAL
                     
                         echo "-----startup-script-output-rcon-startup2"
@@ -186,7 +187,7 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
             fi
         fi
 
-        echo "-----startup-script-output-sleep1-$CHECK_INTERVAL"
+        echo "-----startup-script-output-sleep4-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
     done
 fi
