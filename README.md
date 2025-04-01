@@ -15,6 +15,7 @@ export REGION=<your region>
 export RCON_PW=<admin password>
 export TARGET_TAG=<admin password>
 export GAME_PORTS=<admin password>
+export SERVER_IP_ADDRESS=<ipaddress name>
 
 gcloud commands:
 
@@ -44,5 +45,6 @@ gcloud compute instances create game-server \
 --shielded-integrity-monitoring \ 
 --labels=goog-ops-agent-policy=v2-x86-template-1-4-0,goog-ec-src=vm_add-gcloud \ 
 --reservation-affinity=any \ 
---metadata-from-file=startup-script=$STARTUP_FILE_PATH
+--metadata-from-file=startup-script=$STARTUP_FILE_PATH \
+--address $SERVER_IP_ADDRESS
 
