@@ -21,9 +21,9 @@ variable "GAME_PORTS_TCP" { type = list }
 variable "GAME_PORTS_UDP" { type = list }
 
 locals {
-  project_id = var.PROJECT_ID
-  project_num = var.PROJECT_NUM
-  region     = var.REGION
+  project_id   = var.PROJECT_ID
+  project_num  = var.PROJECT_NUM
+  region       = var.REGION
   machine_type = var.MACHINE_TYPE
   firewall_tcp = var.GAME_PORTS_TCP
   firewall_udp = var.GAME_PORTS_UDP
