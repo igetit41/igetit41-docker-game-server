@@ -29,6 +29,11 @@ RESTART_COUNT=0
 FIRST_RUN=false
 
 RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
+RCON_PLAYER_CHECK=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PLAYER_CHECK" -H "Metadata-Flavor: Google")
+RCON_LIVE_TEST=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_LIVE_TEST" -H "Metadata-Flavor: Google")
+RCON_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_COMMANDS" -H "Metadata-Flavor: Google")
+EXEC_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/EXEC_COMMANDS" -H "Metadata-Flavor: Google")
+RCON_RELOAD=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
 
 if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-first-run"
@@ -141,7 +146,7 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
     echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
     sleep $CHECK_INTERVAL
     
-    GAMESERVER_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help" | grep createhorde)
+    GAMESERVER_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW $RCON_LIVE_TEST)
     echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     
     LOOP_VAR=0
@@ -152,26 +157,29 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
         echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
     
-        GAMESERVER_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help" | grep createhorde)
+        GAMESERVER_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW $RCON_LIVE_TEST)
         echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     done
 done
 
 if [[ "$FIRST_RUN" != "true" ]]; then
-    echo "-----startup-script-output-set-D3F1L3-admin1"
-    sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "setaccesslevel D3F1L3 admin"
-
-    echo "-----startup-script-output-set-starting-points1"
-    sudo docker exec -i game-server sed -i "s/    CharacterFreePoints = 0,/    CharacterFreePoints = 4,/g" ./Zomboid/Server/channel27_SandboxVars.lua
-
-    echo "-----startup-script-output-set-starter-kit1"
-    sudo docker exec -i game-server sed -i "s/    StarterKit = false,/    StarterKit = true,/g" ./Zomboid/Server/channel27_SandboxVars.lua
+    for COMMAND in $RCON_COMMANDS;
+    do
+        echo "-----startup-script-output-set-D3F1L3-admin1"
+        sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$COMMAND"
+    done
+    
+    for COMMAND in $EXEC_COMMANDS;
+    do
+        echo "-----startup-script-output-set-D3F1L3-admin1"
+        sudo docker exec -i game-server $COMMAND
+    done
 
     echo "-----startup-script-output-reloadlua"
-    sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "reloadlua './Zomboid/Server/channel27_SandboxVars.lua'"
+    sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_RELOAD"
 fi
 
-GAMESERVER_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help" | grep createhorde)
+GAMESERVER_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW $RCON_LIVE_TEST)
 echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
 
 LOOP_VAR=0
@@ -182,7 +190,7 @@ while [[ "$GAMESERVER_RUNNING" == "" ]]; do
     echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
     sleep $CHECK_INTERVAL
 
-    GAMESERVER_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "help" | grep createhorde)
+    GAMESERVER_RUNNING=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW $RCON_LIVE_TEST)
     echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
 done
 
@@ -190,7 +198,7 @@ done
 while true; do
     echo "-----startup-script-output-player-check"
     #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
-    PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "players" | grep -Eo '[0-9]+' | head -1)
+    PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW $RCON_PLAYER_CHECK)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
     

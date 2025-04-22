@@ -17,12 +17,12 @@ resource "google_compute_firewall" "game-server" {
 
   allow {
     protocol = "tcp"
-    ports    = local.firewall_tcp
+    ports    = module.vars.firewall_tcp
   }
 
   allow {
     protocol = "udp"
-    ports    = local.firewall_udp
+    ports    = module.vars.firewall_udp
   }
 }
 
@@ -61,8 +61,14 @@ resource "google_compute_instance" "game_server" {
   }
 
   metadata = {
-    enable-osconfig = "TRUE"
-    RCON_PW         = "groovyfunky"
+    enable-osconfig   = "TRUE"
+    RCON_PW           = "groovyfunky"
+    GAME_NAME         = module.vars.game_name
+    RCON_PLAYER_CHECK = module.vars.rcon_player_check
+    RCON_LIVE_TEST    = module.vars.rcon_live_test
+    RCON_COMMANDS     = module.vars.rcon_commands
+    RCON_RELOAD       = module.vars.rcon_reload
+    EXEC_COMMANDS     = module.vars.exec_commands
   }
 
   metadata_startup_script = "${file("../startup-script.sh")}"
