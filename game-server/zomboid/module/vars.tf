@@ -13,11 +13,11 @@ output "firewall_udp" {
 }
 
 output "rcon_player_check" {
-    value = "\"players\" | grep -Eo '[0-9]+' | head -1"
+    value = "players | grep -Eo '[0-9]+' | head -1"
 }
 
 output "rcon_live_test" {
-    value = "\"help\" | grep createhorde"
+    value = "help | grep createhorde"
 }
 
 output "rcon_commands" {

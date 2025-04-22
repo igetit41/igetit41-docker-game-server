@@ -9,7 +9,6 @@ echo "-----startup-script-output-begin"
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml ps
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
 
-
 # Changes Section - Unique to Each Game
 #export SERVER_PORT=15636 # Enshrouded
 #export SERVER_PORT=25565 # Minecraft
