@@ -41,6 +41,13 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     RESTART_COUNT=3
     echo "-----startup-script-output-RESTART_COUNT-$RESTART_COUNT"
 
+    echo "-----startup-script-output-RCON_PW: $RCON_PW"
+    echo "-----startup-script-output-RCON_PLAYER_CHECK: $RCON_PLAYER_CHECK"
+    echo "-----startup-script-output-RCON_LIVE_TEST: $RCON_LIVE_TEST"
+    echo "-----startup-script-output-RCON_COMMANDS: $RCON_COMMANDS"
+    echo "-----startup-script-output-EXEC_COMMANDS: $EXEC_COMMANDS"
+    echo "-----startup-script-output-RCON_RELOAD: $RCON_RELOAD"
+
     sudo apt update -y
     sudo apt install net-tools
 
@@ -165,17 +172,17 @@ done
 if [[ "$FIRST_RUN" != "true" ]]; then
     for COMMAND in $RCON_COMMANDS;
     do
-        echo "-----startup-script-output-set-D3F1L3-admin1"
+        echo "-----startup-script-output-RCON_COMMANDS: $COMMAND"
         sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$COMMAND"
     done
     
     for COMMAND in $EXEC_COMMANDS;
     do
-        echo "-----startup-script-output-set-D3F1L3-admin1"
+        echo "-----startup-script-output-EXEC_COMMANDS: $COMMAND"
         sudo docker exec -i game-server $COMMAND
     done
 
-    echo "-----startup-script-output-reloadlua"
+    echo "-----startup-script-output-RCON_RELOAD: $RCON_RELOAD"
     sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_RELOAD"
 fi
 
