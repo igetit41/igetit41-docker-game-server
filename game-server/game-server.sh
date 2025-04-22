@@ -1,11 +1,5 @@
 #!/bin/bash
 echo "-----game-server-output-pull-origin"
-#sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server reset --hard'
-#sudo -H -u game-server bash -c 'git -C /home/game-server/igetit41-docker-game-server pull origin main'
-#
-#sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/*.sh
-#sudo chmod +x /home/game-server/igetit41-docker-game-server/*.sh
-#sudo cp /home/game-server/igetit41-docker-game-server/game-server/game-server.service /etc/systemd/system/game-server.service
 
 GAME_NAME=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/GAME_NAME" -H "Metadata-Flavor: Google")
 

@@ -12,6 +12,22 @@ output "firewall_udp" {
     value = ["8766-8767", "16261-16272", "27015"]
 }
 
+output "rcon_pw" {
+    value = "groovyfunky"
+}
+
+output "rcon_pw_var" {
+    value = "RCONPassword="
+}
+
+output "rcon_pw_file" {
+    value = "channel27.ini"
+}
+
+output "rcon_pw_file_path" {
+    value = "./Zomboid/Server"
+}
+
 output "rcon_player_check" {
     value = "players | grep -Eo '[0-9]+' | head -1"
 }
