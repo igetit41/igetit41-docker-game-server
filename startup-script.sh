@@ -172,17 +172,17 @@ done
 if [[ "$FIRST_RUN" != "true" ]]; then
     for COMMAND in $RCON_COMMANDS;
     do
-        echo "-----startup-script-output-RCON_COMMANDS: $COMMAND"
+        echo "-----startup-script-output-RCON_COMMANDS2: $COMMAND"
         sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$COMMAND"
     done
     
     for COMMAND in $EXEC_COMMANDS;
     do
-        echo "-----startup-script-output-EXEC_COMMANDS: $COMMAND"
+        echo "-----startup-script-output-EXEC_COMMANDS2: $COMMAND"
         sudo docker exec -i game-server $COMMAND
     done
 
-    echo "-----startup-script-output-RCON_RELOAD: $RCON_RELOAD"
+    echo "-----startup-script-output-RCON_RELOAD2: $RCON_RELOAD"
     sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_RELOAD"
 fi
 
