@@ -213,7 +213,7 @@ while true; do
     #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
     RCON_OUTPUT=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_PLAYER_CHECK")
     echo "-----startup-script-output-RCON_OUTPUT: $RCON_OUTPUT"
-    PLAYERS=$(echo "$RCON_OUTPUT" | $RCON_PLAYER_CHECK_GREP)
+    PLAYERS=$(echo $RCON_OUTPUT | $RCON_PLAYER_CHECK_GREP)
     #PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW $RCON_PLAYER_CHECK)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"

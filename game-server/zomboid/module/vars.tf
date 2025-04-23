@@ -33,7 +33,7 @@ output "rcon_player_check" {
 }
 
 output "rcon_player_check_grep" {
-    value = "grep -Eo '[0-9]+'"
+    value = "tr -cd '[:digit:].'"
 }
 
 output "rcon_live_test" {
