@@ -29,19 +29,19 @@ output "rcon_pw_file_path" {
 }
 
 output "rcon_player_check" {
-    value = "players | grep -Eo '[0-9]+' | head -1"
+    value = "\"players\" | grep -Eo '[0-9]+' | head -1"
 }
 
 output "rcon_live_test" {
-    value = "help | grep createhorde"
+    value = "\"help\" | grep createhorde"
 }
 
 output "rcon_commands" {
-    value = "['setaccesslevel D3F1L3 admin']"
+    value = "['\"setaccesslevel D3F1L3 admin\"']"
 }
 
 output "rcon_reload" {
-    value = "reloadlua './Zomboid/Server/channel27_SandboxVars.lua'"
+    value = "\"reloadlua './Zomboid/Server/channel27_SandboxVars.lua'\""
 }
 
 output "exec_commands" {
