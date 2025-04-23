@@ -32,16 +32,16 @@ output "rcon_player_check" {
     value = "players"
 }
 
-output "rcon_player_check_proc" {
-    value = "| grep -Eo '[0-9]+' | head -1"
+output "rcon_player_check_grep" {
+    value = "-Eo '[0-9]+' | head -1"
 }
 
 output "rcon_live_test" {
     value = "help"
 }
 
-output "rcon_live_test_proc" {
-    value = "| grep createhorde"
+output "rcon_live_test_grep" {
+    value = "createhorde"
 }
 
 output "rcon_commands" {

@@ -68,9 +68,9 @@ resource "google_compute_instance" "game_server" {
     RCON_PW_FILE           = module.vars.rcon_pw_file
     RCON_PW_FILE_PATH      = module.vars.rcon_pw_file_path
     RCON_PLAYER_CHECK      = module.vars.rcon_player_check
-    RCON_PLAYER_CHECK_PROC = module.vars.rcon_player_check_proc
+    RCON_PLAYER_CHECK_GREP = module.vars.rcon_player_check_grep
     RCON_LIVE_TEST         = module.vars.rcon_live_test
-    RCON_LIVE_TEST_PROC    = module.vars.rcon_live_test_proc
+    RCON_LIVE_TEST_GREP    = module.vars.rcon_live_test_grep
     RCON_COMMANDS          = module.vars.rcon_commands
     RCON_RELOAD            = module.vars.rcon_reload
     EXEC_COMMANDS          = module.vars.exec_commands

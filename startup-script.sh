@@ -32,9 +32,9 @@ RCON_PW_VAR=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/
 RCON_PW_FILE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
 RCON_PW_FILE_PATH=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
 RCON_PLAYER_CHECK=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PLAYER_CHECK" -H "Metadata-Flavor: Google")
-RCON_PLAYER_CHECK_PROC=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PLAYER_CHECK_PROC" -H "Metadata-Flavor: Google")
+RCON_PLAYER_CHECK_GREP=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PLAYER_CHECK_GREP" -H "Metadata-Flavor: Google")
 RCON_LIVE_TEST=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_LIVE_TEST" -H "Metadata-Flavor: Google")
-RCON_LIVE_TEST_PROC=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_LIVE_TEST_PROC" -H "Metadata-Flavor: Google")
+RCON_LIVE_TEST_GREP=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_LIVE_TEST_GREP" -H "Metadata-Flavor: Google")
 RCON_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_COMMANDS" -H "Metadata-Flavor: Google")
 EXEC_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/EXEC_COMMANDS" -H "Metadata-Flavor: Google")
 RCON_RELOAD=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
@@ -159,7 +159,7 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
     echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
     sleep $CHECK_INTERVAL
     
-    GAMESERVER_RUNNING=$($(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_LIVE_TEST") $RCON_LIVE_TEST_PROC)
+    GAMESERVER_RUNNING=$(grep $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_LIVE_TEST") $RCON_LIVE_TEST_GREP)
     echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     
     LOOP_VAR=0
@@ -170,7 +170,7 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
         echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
     
-        GAMESERVER_RUNNING=$($(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_LIVE_TEST") $RCON_LIVE_TEST_PROC)
+        GAMESERVER_RUNNING=$(grep $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_LIVE_TEST") $RCON_LIVE_TEST_GREP)
         echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     done
 done
@@ -192,7 +192,7 @@ if [[ "$FIRST_RUN" != "true" ]]; then
     sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_RELOAD"
 fi
     
-GAMESERVER_RUNNING=$($(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_LIVE_TEST") $RCON_LIVE_TEST_PROC)
+GAMESERVER_RUNNING=$(grep $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_LIVE_TEST") $RCON_LIVE_TEST_GREP)
 echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
 
 LOOP_VAR=0
@@ -203,7 +203,7 @@ while [[ "$GAMESERVER_RUNNING" == "" ]]; do
     echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
     sleep $CHECK_INTERVAL
     
-    GAMESERVER_RUNNING=$($(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_LIVE_TEST") $RCON_LIVE_TEST_PROC)
+    GAMESERVER_RUNNING=$(grep $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_LIVE_TEST") $RCON_LIVE_TEST_GREP)
     echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
 done
 
@@ -212,7 +212,7 @@ while true; do
     echo "-----startup-script-output-player-check"
     #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
     
-    PLAYERS=$($(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_PLAYER_CHECK") $RCON_PLAYER_CHECK_PROC)
+    PLAYERS=$(grep $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW "$RCON_PLAYER_CHECK") $RCON_PLAYER_CHECK_GREP)
     #PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p $RCON_PW $RCON_PLAYER_CHECK)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
