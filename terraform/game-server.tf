@@ -74,6 +74,7 @@ resource "google_compute_instance" "game_server" {
     RCON_COMMANDS          = module.vars.rcon_commands
     RCON_RELOAD            = module.vars.rcon_reload
     EXEC_COMMANDS          = module.vars.exec_commands
+    SERVER_RESTART_COUNT   = module.vars.server_restart_count
   }
 
   metadata_startup_script = "${file("../startup-script.sh")}"

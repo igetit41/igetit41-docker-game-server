@@ -9,11 +9,6 @@ echo "-----startup-script-output-begin"
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml ps
 #sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
 
-# Changes Section - Unique to Each Game
-#export SERVER_PORT=15636 # Enshrouded
-#export SERVER_PORT=25565 # Minecraft
-SERVER_PORT=16261 # Project Zomboid
-
 # Define interval between checks for player activity (in seconds)
 CHECK_INTERVAL=60
 
@@ -38,11 +33,12 @@ RCON_LIVE_TEST_GREP=$(curl "http://metadata.google.internal/computeMetadata/v1/i
 RCON_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_COMMANDS" -H "Metadata-Flavor: Google")
 EXEC_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/EXEC_COMMANDS" -H "Metadata-Flavor: Google")
 RCON_RELOAD=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
+SERVER_RESTART_COUNT=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
 
 if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-first-run"
     FIRST_RUN=true
-    RESTART_COUNT=3
+    RESTART_COUNT=$SERVER_RESTART_COUNT
     echo "-----startup-script-output-RESTART_COUNT-$RESTART_COUNT"
 
     echo "-----startup-script-output-RCON_PW: $RCON_PW"
@@ -122,28 +118,28 @@ while [[ "$RCON_CHECK" == "" ]]; do
     echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
 done
 
-INI_CHECK=$(sudo docker exec -i game-server ls ./Zomboid/Server | grep channel27.ini)
+INI_CHECK=$(sudo docker exec -i game-server ls $RCON_PW_FILE_PATH | grep $RCON_PW_FILE)
 echo "-----startup-script-output-INI_CHECK-$INI_CHECK"
 
 
 #HERE
-PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
+PASSWORD_CHECK=$(sudo docker exec -i game-server cat $RCON_PW_FILE_PATH/$RCON_PW_FILE | grep $RCON_PW_VAR)
 #echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
 
-while [[ "$INI_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != "RCONPassword=$RCON_PW" ]]; do
+while [[ "$INI_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != "$RCON_PW_VAR$RCON_PW" ]]; do
 
-        if [[ "$INI_CHECK" == *channel27.ini* ]]; then
+        if [[ "$INI_CHECK" == *$RCON_PW_FILE* ]]; then
             echo "-----startup-script-output-set-rcon-password"
-            sudo docker exec -i game-server sed -i "s/RCONPassword=/RCONPassword=$RCON_PW/g" ./Zomboid/Server/channel27.ini
+            sudo docker exec -i game-server sed -i "s/$RCON_PW_VAR/$RCON_PW_VAR$RCON_PW/g" $RCON_PW_FILE_PATH/$RCON_PW_FILE
         else
             echo "-----startup-script-output-sleep4-$CHECK_INTERVAL"
             sleep $CHECK_INTERVAL
         fi
     
-        INI_CHECK=$(sudo docker exec -i game-server ls ./Zomboid/Server | grep channel27.ini)
+        INI_CHECK=$(sudo docker exec -i game-server ls $RCON_PW_FILE_PATH | grep $RCON_PW_FILE)
         echo "-----startup-script-output-INI_CHECK-$INI_CHECK"
 
-        PASSWORD_CHECK=$(sudo docker exec -i game-server cat ./Zomboid/Server/channel27.ini | grep RCONPassword=)
+        PASSWORD_CHECK=$(sudo docker exec -i game-server cat $RCON_PW_FILE_PATH/$RCON_PW_FILE | grep $RCON_PW_VAR)
         #echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
 done
 
