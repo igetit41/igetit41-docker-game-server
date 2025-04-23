@@ -33,7 +33,7 @@ output "rcon_player_check" {
 }
 
 output "rcon_player_check_grep" {
-    value = "-Eo '[0-9]+' | head -1"
+    value = "grep -Eo '[0-9]+' | head -1"
 }
 
 output "rcon_live_test" {
@@ -41,7 +41,7 @@ output "rcon_live_test" {
 }
 
 output "rcon_live_test_grep" {
-    value = "createhorde"
+    value = "grep createhorde"
 }
 
 output "rcon_commands" {
