@@ -24,8 +24,8 @@ FIRST_RUN=false
 
 RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
 RCON_PW_VAR=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_VAR" -H "Metadata-Flavor: Google")
-RCON_PW_FILE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
-RCON_PW_FILE_PATH=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
+RCON_PW_FILE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_FILE" -H "Metadata-Flavor: Google")
+RCON_PW_FILE_PATH=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_FILE_PATH" -H "Metadata-Flavor: Google")
 RCON_PLAYER_CHECK=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PLAYER_CHECK" -H "Metadata-Flavor: Google")
 RCON_PLAYER_CHECK_GREP=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PLAYER_CHECK_GREP" -H "Metadata-Flavor: Google")
 RCON_LIVE_TEST=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_LIVE_TEST" -H "Metadata-Flavor: Google")
@@ -33,7 +33,7 @@ RCON_LIVE_TEST_GREP=$(curl "http://metadata.google.internal/computeMetadata/v1/i
 RCON_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_COMMANDS" -H "Metadata-Flavor: Google")
 EXEC_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/EXEC_COMMANDS" -H "Metadata-Flavor: Google")
 RCON_RELOAD=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
-SERVER_RESTART_COUNT=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
+SERVER_RESTART_COUNT=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SERVER_RESTART_COUNT" -H "Metadata-Flavor: Google")
 
 if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     echo "-----startup-script-output-first-run"
