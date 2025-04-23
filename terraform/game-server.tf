@@ -61,17 +61,19 @@ resource "google_compute_instance" "game_server" {
   }
 
   metadata = {
-    enable-osconfig   = "TRUE"
-    GAME_NAME         = module.vars.game_name
-    RCON_PW           = module.vars.rcon_pw
-    RCON_PW_VAR       = module.vars.rcon_pw_var
-    RCON_PW_FILE      = module.vars.rcon_pw_file
-    RCON_PW_FILE_PATH = module.vars.rcon_pw_file_path
-    RCON_PLAYER_CHECK = module.vars.rcon_player_check
-    RCON_LIVE_TEST    = module.vars.rcon_live_test
-    RCON_COMMANDS     = module.vars.rcon_commands
-    RCON_RELOAD       = module.vars.rcon_reload
-    EXEC_COMMANDS     = module.vars.exec_commands
+    enable-osconfig        = "TRUE"
+    GAME_NAME              = module.vars.game_name
+    RCON_PW                = module.vars.rcon_pw
+    RCON_PW_VAR            = module.vars.rcon_pw_var
+    RCON_PW_FILE           = module.vars.rcon_pw_file
+    RCON_PW_FILE_PATH      = module.vars.rcon_pw_file_path
+    RCON_PLAYER_CHECK      = module.vars.rcon_player_check
+    RCON_PLAYER_CHECK_PROC = module.vars.rcon_player_check_proc
+    RCON_LIVE_TEST         = module.vars.rcon_live_test
+    RCON_LIVE_TEST_PROC    = module.vars.rcon_live_test_proc
+    RCON_COMMANDS          = module.vars.rcon_commands
+    RCON_RELOAD            = module.vars.rcon_reload
+    EXEC_COMMANDS          = module.vars.exec_commands
   }
 
   metadata_startup_script = "${file("../startup-script.sh")}"
