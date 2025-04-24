@@ -19,7 +19,8 @@ variable "REGION" { type = string }
 variable "MACHINE_TYPE" { type = string }
 
 module "vars" {
-  source = "../game-server/zomboid/module"
+  #source = "../game-server/zomboid/module"
+  source = "../game-server/7d2d/module"
 }
 
 locals {
