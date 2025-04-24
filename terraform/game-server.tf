@@ -64,6 +64,7 @@ resource "google_compute_instance" "game_server" {
     enable-osconfig        = "TRUE"
     GAME_NAME              = module.vars.game_name
     RCON_PW                = module.vars.rcon_pw
+    RCON_PORT              = module.vars.rcon_port
     RCON_PW_VAR            = module.vars.rcon_pw_var
     RCON_PW_FILE           = module.vars.rcon_pw_file
     RCON_PW_FILE_PATH      = module.vars.rcon_pw_file_path

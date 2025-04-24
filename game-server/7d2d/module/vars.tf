@@ -17,23 +17,23 @@ output "rcon_pw" {
 }
 
 output "rcon_pw_var" {
-    value = "RCONPassword="
+    value = "<property name=\"TelnetPassword\"                                 value=\""
 }
 
 output "rcon_pw_file" {
-    value = "channel27.ini"
+    value = "sdtdserver.xml"
 }
 
 output "rcon_pw_file_path" {
-    value = "./Zomboid/Server"
+    value = "./serverfiles"
 }
 
 output "rcon_player_check" {
-    value = "players"
+    value = "listplayerids"
 }
 
 output "rcon_player_check_grep" {
-    value = "tr -cd '[:digit:].'"
+    value = "wc -l"
 }
 
 output "rcon_live_test" {
@@ -41,21 +41,25 @@ output "rcon_live_test" {
 }
 
 output "rcon_live_test_grep" {
-    value = "grep -Eo help"
+    value = "grep -Eo spawnairdrop"
 }
 
 output "rcon_commands" {
-    value = "['setaccesslevel D3F1L3 admin']"
+    value = "['whitelist add D3F1L3', 'whitelist add 76561198031491305']"
 }
 
 output "rcon_reload" {
-    value = "reloadlua './Zomboid/Server/channel27_SandboxVars.lua'"
+    value = "[]"
 }
 
 output "exec_commands" {
-    value = "['sed -i \"s/    CharacterFreePoints = 0,/    CharacterFreePoints = 4,/g\" ./Zomboid/Server/channel27_SandboxVars.lua', 'sed -i \"s/    StarterKit = false,/    StarterKit = true,/g\" ./Zomboid/Server/channel27_SandboxVars.lua']"
+    value = "[]"
 }
 
 output "server_restart_count" {
     value = "3"
+}
+
+output "rcon_port" {
+    value = "8081"
 }

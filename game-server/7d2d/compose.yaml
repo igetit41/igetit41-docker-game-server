@@ -40,9 +40,9 @@ services:
       - 26900:26900/tcp # Default game ports
       - 26900-26902:26900-26902/udp # Default game ports
       - 27015:27015/tcp # Rcon
-      #- 8080:8080/tcp   # OPTIONAL - WEBADMIN
-      #- 8081:8081/tcp   # OPTIONAL - TELNET
-      #- 8082:8082/tcp   # OPTIONAL - WEBSERVER https://7dtd.illy.bz/wiki/Server%20fixes
+      - 8080:8080/tcp   # OPTIONAL - WEBADMIN
+      - 8081:8081/tcp   # OPTIONAL - TELNET
+      - 8082:8082/tcp   # OPTIONAL - WEBSERVER https://7dtd.illy.bz/wiki/Server%20fixes
     ulimits:
       nofile:
         soft: "10240"

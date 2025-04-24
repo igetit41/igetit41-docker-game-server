@@ -49,7 +49,7 @@ output "rcon_commands" {
 }
 
 output "rcon_reload" {
-    value = "reloadlua './Zomboid/Server/channel27_SandboxVars.lua'"
+    value = "[\"reloadlua './Zomboid/Server/channel27_SandboxVars.lua'\"]"
 }
 
 output "exec_commands" {
@@ -58,4 +58,8 @@ output "exec_commands" {
 
 output "server_restart_count" {
     value = "3"
+}
+
+output "rcon_port" {
+    value = "27015"
 }
