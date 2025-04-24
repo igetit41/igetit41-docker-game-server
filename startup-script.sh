@@ -143,7 +143,6 @@ while [[ "$RCON_FILE_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != "$RCON_PW_VAR$RC
             sleep $CHECK_INTERVAL
         fi
     
-
         GAME_SERVER_COMMAND="ls $RCON_PW_FILE_PATH | grep $RCON_PW_FILE"
         echo "-----startup-script-output-GAME_SERVER_COMMAND: $GAME_SERVER_COMMAND"
         RCON_FILE_CHECK=$(sudo docker exec -i game-server $GAME_SERVER_COMMAND)
