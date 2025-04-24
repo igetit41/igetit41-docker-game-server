@@ -17,7 +17,7 @@ output "rcon_pw" {
 }
 
 output "rcon_pw_var" {
-    value = "<property name=\"TelnetPassword\"                                 value=\""
+    value = "TelnetPassword\"                                 value=\""
 }
 
 output "rcon_pw_file" {
