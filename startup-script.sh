@@ -100,7 +100,10 @@ fi
 RCON_CHECK=$(echo "$(sudo docker exec -i game-server ls)" | grep -E rcon)
 echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
 
+LOOP_VAR=0
 while [[ "$RCON_CHECK" == "" ]]; do
+    LOOP_VAR="$(($LOOP_VAR + 1))"
+    echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR"
     echo "-----startup-script-output-waiting-for-server"
     SERVER_CHECK1=$(echo "$(sudo docker ps)" | grep -E game-server)
     echo "-----startup-script-output-SERVER_CHECK1-$SERVER_CHECK1"
@@ -128,12 +131,16 @@ PASSWORD_CHECK=$(echo "$(sudo docker exec -i game-server cat $RCON_PW_FILE_PATH/
 #PASSWORD_CHECK=$(sudo docker exec -i game-server cat $RCON_PW_FILE_PATH/$RCON_PW_FILE | grep $RCON_PW_VAR)
 echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
 
+LOOP_VAR=0
 while [[ "$RCON_FILE_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != "$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2" ]]; do
+    LOOP_VAR="$(($LOOP_VAR + 1))"
+    echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR"
 
     if [[ "$RCON_FILE_CHECK" == *$RCON_PW_FILE* ]]; then
         echo "-----startup-script-output-set-rcon-password"
 
-        GAME_SERVER_COMMAND="sed -i '/$RCON_PW_VAR/d' $RCON_PW_FILE_PATH/$RCON_PW_FILE"
+        #GAME_SERVER_COMMAND="sed -i '/$RCON_PW_VAR/d' $RCON_PW_FILE_PATH/$RCON_PW_FILE"
+        GAME_SERVER_COMMAND="egrep -v '$RCON_PW_VAR' $RCON_PW_FILE_PATH/$RCON_PW_FILE > $RCON_PW_FILE_PATH/$RCON_PW_FILE"
         echo "-----startup-script-output-GAME_SERVER_COMMAND: $GAME_SERVER_COMMAND"
 
         GAME_SERVER_OUTPUT=$(sudo docker exec -i game-server $GAME_SERVER_COMMAND)
@@ -170,7 +177,7 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
     echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
     sleep $CHECK_INTERVAL
     
-    GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW "$RCON_LIVE_TEST") | $RCON_LIVE_TEST_GREP)
+    GAMESERVER_RUNNING=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW "$RCON_LIVE_TEST")" | $RCON_LIVE_TEST_GREP)
     echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     
     LOOP_VAR=0
@@ -181,7 +188,7 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
         echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
     
-        GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW "$RCON_LIVE_TEST") | $RCON_LIVE_TEST_GREP)
+        GAMESERVER_RUNNING=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW "$RCON_LIVE_TEST")" | $RCON_LIVE_TEST_GREP)
         echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     done
 done
