@@ -25,6 +25,8 @@ FIRST_RUN=false
 RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
 RCON_PORT=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PORT" -H "Metadata-Flavor: Google")
 RCON_PW_VAR=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_VAR" -H "Metadata-Flavor: Google")
+RCON_PW_VAR_LINE1=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_VAR_LINE1" -H "Metadata-Flavor: Google")
+RCON_PW_VAR_LINE2=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_VAR_LINE2" -H "Metadata-Flavor: Google")
 RCON_PW_FILE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_FILE" -H "Metadata-Flavor: Google")
 RCON_PW_FILE_PATH=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_FILE_PATH" -H "Metadata-Flavor: Google")
 RCON_PLAYER_CHECK=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PLAYER_CHECK" -H "Metadata-Flavor: Google")
@@ -128,12 +130,12 @@ PASSWORD_CHECK=$(sudo docker exec -i game-server $GAME_SERVER_COMMAND)
 #PASSWORD_CHECK=$(sudo docker exec -i game-server cat $RCON_PW_FILE_PATH/$RCON_PW_FILE | grep $RCON_PW_VAR)
 echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
 
-while [[ "$RCON_FILE_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != "$RCON_PW_VAR$RCON_PW" ]]; do
+while [[ "$RCON_FILE_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != "$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2" ]]; do
 
         if [[ "$RCON_FILE_CHECK" == *$RCON_PW_FILE* ]]; then
             echo "-----startup-script-output-set-rcon-password"
 
-            GAME_SERVER_COMMAND="sed -i \"s/$RCON_PW_VAR/$RCON_PW_VAR$RCON_PW/g\" $RCON_PW_FILE_PATH/$RCON_PW_FILE"
+            GAME_SERVER_COMMAND="sed -i \"s/$RCON_PW_VAR_LINE1$RCON_PW_VAR_LINE2/$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2/g\" $RCON_PW_FILE_PATH/$RCON_PW_FILE"
             echo "-----startup-script-output-GAME_SERVER_COMMAND: $GAME_SERVER_COMMAND"
             GAME_SERVER_OUTPUT=$(sudo docker exec -i game-server $GAME_SERVER_COMMAND)
             echo "-----startup-script-output-GAME_SERVER_OUTPUT: $GAME_SERVER_OUTPUT"

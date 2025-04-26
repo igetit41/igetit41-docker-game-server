@@ -17,7 +17,15 @@ output "rcon_pw" {
 }
 
 output "rcon_pw_var" {
+    value = "RCONPassword"
+}
+
+output "rcon_pw_var_line1" {
     value = "RCONPassword="
+}
+
+output "rcon_pw_var_line2" {
+    value = ""
 }
 
 output "rcon_pw_file" {
