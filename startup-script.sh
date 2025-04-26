@@ -139,18 +139,11 @@ while [[ "$RCON_FILE_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != "$RCON_PW_VAR_LI
     if [[ "$RCON_FILE_CHECK" == *$RCON_PW_FILE* ]]; then
         echo "-----startup-script-output-set-rcon-password"
 
-        #GAME_SERVER_COMMAND="sed -i '/$RCON_PW_VAR/d' $RCON_PW_FILE_PATH/$RCON_PW_FILE"
-        GAME_SERVER_COMMAND="egrep -v '$RCON_PW_VAR' $RCON_PW_FILE_PATH/$RCON_PW_FILE > $RCON_PW_FILE_PATH/$RCON_PW_FILE"
-        echo "-----startup-script-output-GAME_SERVER_COMMAND: $GAME_SERVER_COMMAND"
+        REMOVE_EMPTY_PASSWORD=$(sudo docker exec -i game-server grep -v "$RCON_PW_VAR" $RCON_PW_FILE_PATH/$RCON_PW_FILE > $RCON_PW_FILE_PATH/$RCON_PW_FILE)
+        echo "-----startup-script-output-REMOVE_EMPTY_PASSWORD: $REMOVE_EMPTY_PASSWORD"
 
-        GAME_SERVER_OUTPUT=$(sudo docker exec -i game-server $GAME_SERVER_COMMAND)
-        echo "-----startup-script-output-GAME_SERVER_OUTPUT: $GAME_SERVER_OUTPUT"
-
-        GAME_SERVER_COMMAND="echo '$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2' >> $RCON_PW_FILE_PATH/$RCON_PW_FILE"
-        echo "-----startup-script-output-GAME_SERVER_COMMAND: $GAME_SERVER_COMMAND"
-
-        GAME_SERVER_OUTPUT=$(sudo docker exec -i game-server $GAME_SERVER_COMMAND)
-        echo "-----startup-script-output-GAME_SERVER_OUTPUT: $GAME_SERVER_OUTPUT"
+        ADD_NEW_PASSWORD=$(sudo docker exec -i game-server echo "$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2" >> $RCON_PW_FILE_PATH/$RCON_PW_FILE)
+        echo "-----startup-script-output-ADD_NEW_PASSWORD: $ADD_NEW_PASSWORD"
         #sudo docker exec -i game-server sed -i "s/$RCON_PW_VAR/$RCON_PW_VAR$RCON_PW/g" $RCON_PW_FILE_PATH/$RCON_PW_FILE
     else
         echo "-----startup-script-output-sleep4-$CHECK_INTERVAL"
