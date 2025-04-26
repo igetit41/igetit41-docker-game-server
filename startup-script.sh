@@ -102,12 +102,12 @@ echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
 
 while [[ "$RCON_CHECK" == "" ]]; do
     echo "-----startup-script-output-waiting-for-server"
-    SERVER_CHECK1=$(grep -E "game-server" $(sudo docker ps) | awk '{print $NF}')
+    SERVER_CHECK1=$(grep -E "game-server" $(sudo docker ps))
     echo "-----startup-script-output-SERVER_CHECK1-$SERVER_CHECK1"
     SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
     echo "-----startup-script-output-SERVER_CHECK2-$SERVER_CHECK2"
     
-    if [[ "$SERVER_CHECK1" == "game-server" ]] && [[ "$SERVER_CHECK2" == /home* ]]; then
+    if [[ "$SERVER_CHECK1" == *game-server* ]] && [[ "$SERVER_CHECK2" == /home* ]]; then
         echo "-----startup-script-output-installing-rcon"
         echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
         echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
