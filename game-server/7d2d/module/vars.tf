@@ -16,6 +16,10 @@ output "rcon_pw" {
     value = "groovyfunky"
 }
 
+output "rcon_other_args" {
+    value = "-t telnet"
+}
+
 output "rcon_pw_var" {
     value = "TelnetPassword"
 }
