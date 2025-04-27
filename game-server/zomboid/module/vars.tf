@@ -45,7 +45,7 @@ output "rcon_player_check" {
 }
 
 output "rcon_player_check_grep" {
-    value = "tr -cd '[:digit:].'"
+    value = ""
 }
 
 output "rcon_live_test" {

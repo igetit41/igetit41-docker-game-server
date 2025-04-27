@@ -222,7 +222,7 @@ done
 while true; do
     echo "-----startup-script-output-player-check"
     #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
-    PLAYERS=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS \"$RCON_PLAYER_CHECK\")" | $RCON_PLAYER_CHECK_GREP)
+    PLAYERS=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS \"$RCON_PLAYER_CHECK\")" | $RCON_PLAYER_CHECK_GREP | tr -cd '[:digit:].')
     #PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS $RCON_PLAYER_CHECK)
     STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
     echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"

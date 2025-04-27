@@ -45,7 +45,7 @@ output "rcon_player_check" {
 }
 
 output "rcon_player_check_grep" {
-    value = "grep -Eo Total | awk '{print $3}'"
+    value = "grep -Eo Total"
 }
 
 output "rcon_live_test" {
@@ -61,7 +61,7 @@ output "rcon_commands" {
 }
 
 output "rcon_reload" {
-    value = "[]"
+    value = "['sed -i \"s|^.*ServerPassword.*|        <property name='ServerPassword'                                 value='groovyfunky'/>|g\" ./serverfiles/sdtdserver.xml']"
 }
 
 output "exec_commands" {
