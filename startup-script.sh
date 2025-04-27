@@ -139,7 +139,7 @@ while [[ "$RCON_FILE_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != *$RCON_PW* ]]; d
     if [[ "$RCON_FILE_CHECK" == *$RCON_PW_FILE* ]]; then
         echo "-----startup-script-output-set-rcon-password"
 
-        REMOVE_EMPTY_PASSWORD=$(sudo docker exec -i game-server bash -c "sed -i \"s/$RCON_PW_VAR/$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2/g\" $RCON_PW_FILE_PATH/$RCON_PW_FILE")
+        REMOVE_EMPTY_PASSWORD=$(sudo docker exec -i game-server bash -c "sed -i \"s|$RCON_PW_VAR|$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2|g\" $RCON_PW_FILE_PATH/$RCON_PW_FILE")
         #REMOVE_EMPTY_PASSWORD=$(sudo docker exec -i game-server cat $RCON_PW_FILE_PATH/$RCON_PW_FILE | grep -v $RCON_PW_VAR > $RCON_PW_FILE_PATH/$RCON_PW_FILE)
         echo "-----startup-script-output-REMOVE_EMPTY_PASSWORD: $REMOVE_EMPTY_PASSWORD"
 
