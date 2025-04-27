@@ -178,7 +178,7 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
         echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
     
-        GAMESERVER_RUNNING=$(echo "$(sudo docker exec -i game-server bash -c \"./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:8081 -p groovyfunky -t telnet 'listplayerids'\")" | $RCON_LIVE_TEST_GREP)
+        GAMESERVER_RUNNING=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST")" | $RCON_LIVE_TEST_GREP)
         echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     done
 done

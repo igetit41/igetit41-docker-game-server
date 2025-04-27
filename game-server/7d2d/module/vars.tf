@@ -45,7 +45,7 @@ output "rcon_player_check" {
 }
 
 output "rcon_player_check_grep" {
-    value = "grep Total | awk '{print $3}'"
+    value = "grep -Eo Total | awk '{print $3}'"
 }
 
 output "rcon_live_test" {
