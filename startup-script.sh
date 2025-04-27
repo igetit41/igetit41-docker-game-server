@@ -124,6 +124,7 @@ while [[ "$RCON_CHECK" == "" ]]; do
     echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
 done
 
+
 RCON_FILE_CHECK=$(echo "$(sudo docker exec -i game-server ls $RCON_PW_FILE_PATH)" | grep -E $RCON_PW_FILE)
 echo "-----startup-script-output-RCON_FILE_CHECK-$RCON_FILE_CHECK"
 
