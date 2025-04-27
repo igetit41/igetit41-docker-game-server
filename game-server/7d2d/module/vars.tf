@@ -5,7 +5,7 @@ output "game_name" {
 }
 
 output "firewall_tcp" {
-    value = ["26900", "27015"]
+    value = ["26900", "27015", "8080-8082"]
 }
 
 output "firewall_udp" {
