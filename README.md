@@ -15,3 +15,13 @@ export TF_VAR_GAME_PORTS_TCP=<tcp ports>
 export TF_VAR_GAME_PORTS_UDP=<udp ports>
 export TF_VAR_MACHINE_TYPE=<server machine type>
 
+
+
+https://github.com/gorcon/rcon-cli
+
+https://github.com/Danixu/project-zomboid-server-docker
+https://pzwiki.net/wiki/Admin_commands
+
+https://github.com/vinanrra/Docker-7DaysToDie
+https://7daystodie.fandom.com/wiki/Command_Console
+
