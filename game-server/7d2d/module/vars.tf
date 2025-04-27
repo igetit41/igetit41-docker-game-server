@@ -25,11 +25,11 @@ output "rcon_pw_var" {
 }
 
 output "rcon_pw_var_line1" {
-    value = "        <property name=\"TelnetPassword\"                                 value=\""
+    value = "        <property name='TelnetPassword'                                 value='"
 }
 
 output "rcon_pw_var_line2" {
-    value = "\"/>"
+    value = "'/>"
 }
 
 output "rcon_pw_file" {

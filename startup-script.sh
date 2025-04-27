@@ -248,3 +248,4 @@ while true; do
     echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
     sleep $CHECK_INTERVAL
 done
+
