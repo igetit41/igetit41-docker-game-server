@@ -6,11 +6,11 @@ output "game_name" {
 }
 
 output "firewall_tcp" {
-    value = ["26900", "27015", "8080-8082"]
+    value = ["26900"]
 }
 
 output "firewall_udp" {
-    value = ["26900-26902", "27015"]
+    value = ["26900-26902"]
 }
 
 output "rcon_pw" {

@@ -187,21 +187,22 @@ if [[ "$FIRST_RUN" == "true" ]]; then
     ADDITIONAL_RESTART=false
     for COMMAND in $RCON_COMMANDS;
     do
-        echo "-----startup-script-output-RCON_COMMANDS2: $COMMAND"
+        echo "-----startup-script-output-RCON_COMMANDS: $COMMAND"
         sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND"
         ADDITIONAL_RESTART=true
     done
     
     for COMMAND in $EXEC_COMMANDS;
     do
-        echo "-----startup-script-output-EXEC_COMMANDS2: $COMMAND"
-        sudo docker exec -i game-server $COMMAND
+        echo "-----startup-script-output-EXEC_COMMAND: $COMMAND"
+        EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$COMMAND")
+        echo "-----startup-script-output-EXEC_COMMAND_OUTPUT: $EXEC_COMMAND_OUTPUT"
         ADDITIONAL_RESTART=true
     done
     
     for COMMAND in $RCON_RELOAD;
     do
-        echo "-----startup-script-output-RCON_RELOAD2: $COMMAND"
+        echo "-----startup-script-output-RCON_RELOAD: $COMMAND"
         sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND"
     done
     if [[ "$ADDITIONAL_RESTART" == "true" ]]; then
