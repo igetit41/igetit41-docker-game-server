@@ -1,4 +1,5 @@
 
+variable "server_password" { type = string }
 
 output "game_name" {
     value = "zomboid"

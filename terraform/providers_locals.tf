@@ -17,10 +17,12 @@ variable "PROJECT_ID" { type = string }
 variable "PROJECT_NUM" { type = string }
 variable "REGION" { type = string }
 variable "MACHINE_TYPE" { type = string }
+variable "SERVER_PASSWORD" { type = string }
 
 module "vars" {
   #source = "../game-server/zomboid/module"
   source = "../game-server/7d2d/module"
+  server_password = var.SERVER_PASSWORD
 }
 
 locals {

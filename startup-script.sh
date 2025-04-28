@@ -184,16 +184,19 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
 done
 
 if [[ "$FIRST_RUN" == "true" ]]; then
+    ADDITIONAL_RESTART=false
     for COMMAND in $RCON_COMMANDS;
     do
         echo "-----startup-script-output-RCON_COMMANDS2: $COMMAND"
         sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND"
+        ADDITIONAL_RESTART=true
     done
     
     for COMMAND in $EXEC_COMMANDS;
     do
         echo "-----startup-script-output-EXEC_COMMANDS2: $COMMAND"
         sudo docker exec -i game-server $COMMAND
+        ADDITIONAL_RESTART=true
     done
     
     for COMMAND in $RCON_RELOAD;
@@ -201,6 +204,9 @@ if [[ "$FIRST_RUN" == "true" ]]; then
         echo "-----startup-script-output-RCON_RELOAD2: $COMMAND"
         sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND"
     done
+    if [[ "$ADDITIONAL_RESTART" == "true" ]]; then
+        RESTART_OUTPUT=$(sudo docker restart game-server)
+    fi
 fi
     
 GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST") | $RCON_LIVE_TEST_GREP)

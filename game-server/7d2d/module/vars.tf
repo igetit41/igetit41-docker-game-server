@@ -1,4 +1,5 @@
 
+variable "server_password" { type = string }
 
 output "game_name" {
     value = "7d2d"
@@ -65,7 +66,7 @@ output "rcon_reload" {
 }
 
 output "exec_commands" {
-    value = "['sed -i \"s|^.*ServerPassword.*|        <property name='ServerPassword'                                 value='groovyfunky'/>|g\" ./serverfiles/sdtdserver.xml']"
+    value = "['sed -i \"s|^.*ServerPassword.*|        <property name='ServerPassword'                                 value='${var.server_password}'/>|g\" ./serverfiles/sdtdserver.xml']"
 }
 
 output "server_restart_count" {
