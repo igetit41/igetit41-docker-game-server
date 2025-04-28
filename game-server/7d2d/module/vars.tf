@@ -58,15 +58,15 @@ output "rcon_live_test_grep" {
 }
 
 output "rcon_commands" {
-    value = "['whitelist add D3F1L3', 'whitelist add 76561198031491305']"
+    value = "whitelist add D3F1L3;whitelist add 76561198031491305"
 }
 
 output "rcon_reload" {
-    value = "[]"
+    value = ""
 }
 
 output "exec_commands" {
-    value = "[\"sed -i 's|^.*ServerPassword.*|        <property name='ServerPassword'                                 value='${var.server_password}'/>|g' ./serverfiles/sdtdserver.xml\"]"
+    value = "sed -i 's|^.*ServerPassword.*|        <property name='ServerPassword'                                 value='${var.server_password}'/>|g' ./serverfiles/sdtdserver.xml"
 }
 
 output "server_restart_count" {

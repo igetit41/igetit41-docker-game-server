@@ -185,14 +185,19 @@ done
 
 if [[ "$FIRST_RUN" == "true" ]]; then
     ADDITIONAL_RESTART=false
-    for COMMAND in "${RCON_COMMANDS[@]}";
+    IFS_OLD=$IFS
+
+    IFS=';' read -ra COMMANDS <<< "$RCON_COMMANDS"
+    for COMMAND in "${COMMANDS[@]}";
     do
-        echo "-----startup-script-output-RCON_COMMANDS: $COMMAND"
-        sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND"
+        echo "-----startup-script-output-RCON_COMMAND: $COMMAND"
+        RCON_COMMAND_OUTPUT=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND")
+        echo "-----startup-script-output-RCON_COMMAND_OUTPUT: $RCON_COMMAND_OUTPUT"
         ADDITIONAL_RESTART=true
     done
     
-    for COMMAND in "${EXEC_COMMANDS[@]}";
+    IFS=';' read -ra COMMANDS <<< "$EXEC_COMMANDS"
+    for COMMAND in "${COMMANDS[@]}";
     do
         echo "-----startup-script-output-EXEC_COMMAND: $COMMAND"
         EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$COMMAND")
@@ -200,16 +205,21 @@ if [[ "$FIRST_RUN" == "true" ]]; then
         ADDITIONAL_RESTART=true
     done
     
-    for COMMAND in "${RCON_RELOAD[@]}";
+    IFS=';' read -ra COMMANDS <<< "$RCON_RELOAD"
+    for COMMAND in "${COMMANDS[@]}";
     do
         echo "-----startup-script-output-RCON_RELOAD: $COMMAND"
-        sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND"
+        RCON_RELOAD_OUTPUT=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND")
+        echo "-----startup-script-output-RCON_RELOAD_OUTPUT: $RCON_RELOAD_OUTPUT"
     done
+
     if [[ "$ADDITIONAL_RESTART" == "true" ]]; then
         RESTART_OUTPUT=$(sudo docker restart game-server)
     fi
+
+    IFS=$IFS_OLD
 fi
-    
+
 GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST") | $RCON_LIVE_TEST_GREP)
 echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
 
