@@ -183,7 +183,7 @@ while [[ $RESTART_COUNT -gt "0" ]]; do
     done
 done
 
-if [[ "$FIRST_RUN" != "true" ]]; then
+if [[ "$FIRST_RUN" == "true" ]]; then
     for COMMAND in $RCON_COMMANDS;
     do
         echo "-----startup-script-output-RCON_COMMANDS2: $COMMAND"

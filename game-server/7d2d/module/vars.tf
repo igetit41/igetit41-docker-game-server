@@ -45,7 +45,7 @@ output "rcon_player_check" {
 }
 
 output "rcon_player_check_grep" {
-    value = "grep -Eo Total"
+    value = "grep -E Total"
 }
 
 output "rcon_live_test" {
