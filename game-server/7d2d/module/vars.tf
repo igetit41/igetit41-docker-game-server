@@ -67,7 +67,7 @@ output "rcon_reload" {
 }
 
 output "exec_commands" {
-    value = "sed -i 's|^.*ServerPassword.*|        <property name=\"ServerPassword\"                                 value=\"${var.server_password}\"/>|g' ./serverfiles/sdtdserver.xml"
+    value = "sed -i 's|^.*ServerPassword.*|        <property name=\"ServerPassword\" value=\"${var.server_password}\"/>|g' ./serverfiles/sdtdserver.xml;sed -i 's|^.*EACEnabled.*|        <property name=\"EACEnabled\" value=\"false\"/>|g' ./serverfiles/sdtdserver.xml;sed -i 's|^.*<!-- GAMEPLAY -->.*|        <!-- GAMEPLAY --> <property name=\"RecipeFilter\" value=\"0\"/> <property name=\"StarterQuestEnabled\" value=\"true\"/> <property name=\"WanderingHordeFrequency\" value=\"16\"/> <property name=\"WanderingHordeRange\" value=\"8\"/> <property name=\"WanderingHordeEnemyCount\" value=\"10\"/> <property name=\"WanderingHordeEnemyRange\" value=\"10\"/> <property name=\"POITierLootScale\" value=\"0\"/>|g' ./serverfiles/sdtdserver.xml"
 }
 
 output "server_restart_count" {

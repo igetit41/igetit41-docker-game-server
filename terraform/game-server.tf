@@ -47,7 +47,7 @@ resource "google_compute_instance" "game_server" {
       resource_manager_tags = {}
       #image                 = "ubuntu-os-cloud/ubuntu-2004-lts"
       image                 = "ubuntu-os-cloud/ubuntu-2004-focal-v20250313"
-      size                  = 20
+      size                  = 100
       type                  = "pd-balanced"
     }
   }
