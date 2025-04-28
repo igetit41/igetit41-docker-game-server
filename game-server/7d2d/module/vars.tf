@@ -61,11 +61,11 @@ output "rcon_commands" {
 }
 
 output "rcon_reload" {
-    value = "['sed -i \"s|^.*ServerPassword.*|        <property name='ServerPassword'                                 value='groovyfunky'/>|g\" ./serverfiles/sdtdserver.xml']"
+    value = "[]"
 }
 
 output "exec_commands" {
-    value = "[]"
+    value = "['sed -i \"s|^.*ServerPassword.*|        <property name='ServerPassword'                                 value='groovyfunky'/>|g\" ./serverfiles/sdtdserver.xml']"
 }
 
 output "server_restart_count" {
