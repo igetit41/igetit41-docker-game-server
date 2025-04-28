@@ -142,6 +142,17 @@ while [[ "$RCON_FILE_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != *$RCON_PW* ]]; d
 
         UPDATE_PASSWORD=$(sudo docker exec -i game-server bash -c "sed -i \"s|^.*$RCON_PW_VAR.*|$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2|g\" $RCON_PW_FILE_PATH/$RCON_PW_FILE")
         echo "-----startup-script-output-UPDATE_PASSWORD: $UPDATE_PASSWORD"
+        
+        IFS_OLD=$IFS
+        IFS=';' read -ra COMMANDS <<< "$EXEC_COMMANDS"
+        for COMMAND in "${COMMANDS[@]}";
+        do
+            echo "-----startup-script-output-EXEC_COMMAND: $COMMAND"
+            EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$COMMAND")
+            echo "-----startup-script-output-EXEC_COMMAND_OUTPUT: $EXEC_COMMAND_OUTPUT"
+        done
+        IFS=$IFS_OLD
+
     else
         echo "-----startup-script-output-sleep4-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
@@ -193,15 +204,6 @@ if [[ "$FIRST_RUN" == "true" ]]; then
         echo "-----startup-script-output-RCON_COMMAND: $COMMAND"
         RCON_COMMAND_OUTPUT=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND")
         echo "-----startup-script-output-RCON_COMMAND_OUTPUT: $RCON_COMMAND_OUTPUT"
-        ADDITIONAL_RESTART=true
-    done
-    
-    IFS=';' read -ra COMMANDS <<< "$EXEC_COMMANDS"
-    for COMMAND in "${COMMANDS[@]}";
-    do
-        echo "-----startup-script-output-EXEC_COMMAND: $COMMAND"
-        EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$COMMAND")
-        echo "-----startup-script-output-EXEC_COMMAND_OUTPUT: $EXEC_COMMAND_OUTPUT"
         ADDITIONAL_RESTART=true
     done
     
