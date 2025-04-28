@@ -66,7 +66,7 @@ output "rcon_reload" {
 }
 
 output "exec_commands" {
-    value = "['sed -i \"s|^.*ServerPassword.*|        <property name=\"ServerPassword\"                                 value=\"${var.server_password}\"/>|g\" ./serverfiles/sdtdserver.xml']"
+    value = "[\"sed -i 's|^.*ServerPassword.*|        <property name='ServerPassword'                                 value='${var.server_password}'/>|g' ./serverfiles/sdtdserver.xml\"]"
 }
 
 output "server_restart_count" {
