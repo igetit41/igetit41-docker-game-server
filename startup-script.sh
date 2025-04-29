@@ -261,6 +261,15 @@ while true; do
         break
     fi
 
+    RCON_CHECK=$(echo "$(sudo docker exec -i game-server ls)" | grep -E rcon)
+    echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
+    
+    if [[ "$RCON_CHECK" == "" ]]; then
+        echo "-----startup-script-output-installing-rcon"
+        echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
+        echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+    fi
+
     echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
     sleep $CHECK_INTERVAL
 done

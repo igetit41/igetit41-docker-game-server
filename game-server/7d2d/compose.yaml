@@ -13,13 +13,13 @@ services:
       - TimeZone=America/Los_Angeles # Optional - Change Timezone
       - TEST_ALERT=NO                # Optional - Send a test alert
       - UPDATE_MODS=NO              # Optional - This will allow mods to be update on start, each mod also need to have XXXX_UPDATE=YES to update on start
-#      - MODS_URLS="https://codeload.github.com/dwallorde/war-of-the-walkers-stable/zip/refs/heads/main"                 # Optional - Mods urls to install, must be ZIP or RAR.
-      - MODS_URLS=""                 # Optional - Mods urls to install, must be ZIP or RAR.
+      - MODS_URLS="https://supporter-files.nexus-cdn.com/1059/97/WotWV5.2.7%20B121%20BBM%20Server-97-V5-2-7B121.zip?md5=gj2HdlxS0C3oFtU6NknP2Q&expires=1745976431&user_id=29419050"                 # Optional - Mods urls to install, must be ZIP or RAR.
+#      - MODS_URLS=""                 # Optional - Mods urls to install, must be ZIP or RAR.
       - ALLOC_FIXES=NO              # Optional - Install ALLOC FIXES
       - ALLOC_FIXES_UPDATE=NO       # Optional - Update Allocs Fixes before server start
-      - UNDEAD_LEGACY=YES            # Optional - Install Undead Legacy mod, if DARKNESS_FALLS it's enable will not install anything
+      - UNDEAD_LEGACY=NO            # Optional - Install Undead Legacy mod, if DARKNESS_FALLS it's enable will not install anything
       - UNDEAD_LEGACY_VERSION=stable # Optional - Undead Legacy version
-      - UNDEAD_LEGACY_UPDATE=YES     # Optional - Update Undead Legacy mod before server start
+      - UNDEAD_LEGACY_UPDATE=NO     # Optional - Update Undead Legacy mod before server start
       - DARKNESS_FALLS=NO            # Optional - Install Darkness Falls mod, if UNDEAD_LEGACY it's enable will not install anything
       - DARKNESS_FALLS_UPDATE=NO     # Optional - Update Darkness Falls mod before server start
       - DARKNESS_FALLS_URL=False     # Optional - Install the provided Darkness Falls url
