@@ -26,8 +26,7 @@ RCON_PW=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attr
 RCON_OTHER_ARGS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_OTHER_ARGS" -H "Metadata-Flavor: Google")
 RCON_PORT=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PORT" -H "Metadata-Flavor: Google")
 RCON_PW_VAR=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_VAR" -H "Metadata-Flavor: Google")
-RCON_PW_VAR_LINE1=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_VAR_LINE1" -H "Metadata-Flavor: Google")
-RCON_PW_VAR_LINE2=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_VAR_LINE2" -H "Metadata-Flavor: Google")
+RCON_PW_VAR_LINE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_VAR_LINE" -H "Metadata-Flavor: Google")
 RCON_PW_FILE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_FILE" -H "Metadata-Flavor: Google")
 RCON_PW_FILE_PATH=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW_FILE_PATH" -H "Metadata-Flavor: Google")
 RCON_PLAYER_CHECK=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PLAYER_CHECK" -H "Metadata-Flavor: Google")
@@ -140,7 +139,7 @@ while [[ "$RCON_FILE_CHECK" == "" ]] || [[ "$PASSWORD_CHECK" != *$RCON_PW* ]]; d
     if [[ "$RCON_FILE_CHECK" == *$RCON_PW_FILE* ]]; then
         echo "-----startup-script-output-set-rcon-password"
 
-        UPDATE_PASSWORD=$(sudo docker exec -i game-server bash -c "sed -i \"s|^.*$RCON_PW_VAR.*|$RCON_PW_VAR_LINE1$RCON_PW$RCON_PW_VAR_LINE2|g\" $RCON_PW_FILE_PATH/$RCON_PW_FILE")
+        UPDATE_PASSWORD=$(sudo docker exec -i game-server bash -c "sed -i 's|^.*$RCON_PW_VAR.*|$RCON_PW_VAR_LINE|g' $RCON_PW_FILE_PATH/$RCON_PW_FILE")
         echo "-----startup-script-output-UPDATE_PASSWORD: $UPDATE_PASSWORD"
         
         IFS_OLD=$IFS

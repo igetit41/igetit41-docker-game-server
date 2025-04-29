@@ -1,6 +1,13 @@
 
 variable "server_password" { type = string }
 
+variable "rcon_password" { type = string }
+
+locals {
+    rcon_pw_file_path = "./serverfiles/7DaysToDieServer_Data/.."
+    rcon_pw_file = "sdtdserver.xml"
+}
+
 output "game_name" {
     value = "7d2d"
 }
@@ -14,7 +21,7 @@ output "firewall_udp" {
 }
 
 output "rcon_pw" {
-    value = "groovyfunky"
+    value = "${var.rcon_password}"
 }
 
 output "rcon_other_args" {
@@ -25,21 +32,16 @@ output "rcon_pw_var" {
     value = "TelnetPassword"
 }
 
-output "rcon_pw_var_line1" {
-    value = "        <property name='TelnetPassword'                                 value='"
-}
-
-output "rcon_pw_var_line2" {
-    value = "'/>"
+output "rcon_pw_var_line" {
+    value = "        <property name=\"TelnetPassword\" value=\"${var.rcon_password}\"/>"
 }
 
 output "rcon_pw_file" {
-    value = "sdtdserver.xml"
+    value = "${local.rcon_pw_file}"
 }
 
 output "rcon_pw_file_path" {
-    #value = "./serverfiles"
-    value = "./serverfiles/7DaysToDieServer_Data/.."
+    value = "${local.rcon_pw_file_path}"
 }
 
 output "rcon_player_check" {
@@ -68,8 +70,7 @@ output "rcon_reload" {
 }
 
 output "exec_commands" {
-    value = "sed -i 's|^.*ServerName.*|        <property name=\"ServerName\" value=\"game-server\"/>|g' ./serverfiles/7DaysToDieServer_Data/../sdtdserver.xml;sed -i 's|^.*ServerPassword.*|        <property name=\"ServerPassword\" value=\"${var.server_password}\"/>|g' ./serverfiles/7DaysToDieServer_Data/../sdtdserver.xml;sed -i 's|^.*POITierLootScale.*|        <property name=\"POITierLootScale\" value=\"0\"/>|g' ./serverfiles/7DaysToDieServer_Data/../sdtdserver.xml;sed -i 's|^.*EACEnabled.*|        <property name=\"EACEnabled\" value=\"false\"/>|g' ./serverfiles/7DaysToDieServer_Data/../sdtdserver.xml;sed -i 's|^.*GAMEPLAY.*|        <property name=\"RecipeFilter\" value=\"0\"/> <property name=\"StarterQuestEnabled\" value=\"true\"/> <property name=\"WanderingHordeFrequency\" value=\"16\"/> <property name=\"WanderingHordeRange\" value=\"8\"/> <property name=\"WanderingHordeEnemyCount\" value=\"10\"/> <property name=\"WanderingHordeEnemyRange\" value=\"10\"/>|g' ./serverfiles/7DaysToDieServer_Data/../sdtdserver.xml;sed -i 's|^.*<configuration>.*|<configuration> <dllmap dll=\"dl\" target=\"libdl.so.2\"/>|g' ./serverfiles/7DaysToDieServer_Data/MonoBleedingEdge/etc/mono/config"
-    #value = "sed -i 's|^.*ServerPassword.*|        <property name=\"ServerPassword\" value=\"${var.server_password}\"/>|g' ./serverfiles/sdtdserver.xml;sed -i 's|^.*EACEnabled.*|        <property name=\"EACEnabled\" value=\"false\"/>|g' ./serverfiles/sdtdserver.xml;sed -i 's|^.*<configuration>.*|<configuration> <dllmap dll=\"dl\" target=\"libdl.so.2\"/>|g' ./serverfiles/7DaysToDieServer_Data/MonoBleedingEdge/etc/mono/config"
+    value = "sed -i 's|^.*ServerName.*|        <property name=\"ServerName\" value=\"game-server\"/>|g' ${local.rcon_pw_file_path}/${local.rcon_pw_file};sed -i 's|^.*ServerPassword.*|        <property name=\"ServerPassword\" value=\"${var.server_password}\"/>|g' ${local.rcon_pw_file_path}/${local.rcon_pw_file};sed -i 's|^.*BloodMoonFrequency.*|        <property name=\"BloodMoonFrequency\" value=\"0\"/>|g' ${local.rcon_pw_file_path}/${local.rcon_pw_file};sed -i 's|^.*EACEnabled.*|        <property name=\"EACEnabled\" value=\"false\"/>|g' ${local.rcon_pw_file_path}/${local.rcon_pw_file};sed -i 's|^.*<configuration>.*|<configuration> <dllmap dll=\"dl\" target=\"libdl.so.2\"/>|g' ./serverfiles/7DaysToDieServer_Data/MonoBleedingEdge/etc/mono/config"
 }
 
 output "server_restart_count" {

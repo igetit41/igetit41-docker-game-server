@@ -1,6 +1,8 @@
 
 variable "server_password" { type = string }
 
+variable "rcon_password" { type = string }
+
 output "game_name" {
     value = "zomboid"
 }
@@ -14,7 +16,7 @@ output "firewall_udp" {
 }
 
 output "rcon_pw" {
-    value = "groovyfunky"
+    value = "${var.rcon_password}"
 }
 
 output "rcon_other_args" {
@@ -25,12 +27,8 @@ output "rcon_pw_var" {
     value = "RCONPassword"
 }
 
-output "rcon_pw_var_line1" {
-    value = "RCONPassword="
-}
-
-output "rcon_pw_var_line2" {
-    value = ""
+output "rcon_pw_var_line" {
+    value = "RCONPassword=${var.rcon_password}"
 }
 
 output "rcon_pw_file" {

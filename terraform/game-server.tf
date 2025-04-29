@@ -67,8 +67,7 @@ resource "google_compute_instance" "game_server" {
     RCON_OTHER_ARGS        = module.vars.rcon_other_args
     RCON_PORT              = module.vars.rcon_port
     RCON_PW_VAR            = module.vars.rcon_pw_var
-    RCON_PW_VAR_LINE1      = module.vars.rcon_pw_var_line1
-    RCON_PW_VAR_LINE2      = module.vars.rcon_pw_var_line2
+    RCON_PW_VAR_LINE      = module.vars.rcon_pw_var_line
     RCON_PW_FILE           = module.vars.rcon_pw_file
     RCON_PW_FILE_PATH      = module.vars.rcon_pw_file_path
     RCON_PLAYER_CHECK      = module.vars.rcon_player_check
