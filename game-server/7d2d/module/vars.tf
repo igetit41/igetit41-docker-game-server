@@ -71,7 +71,7 @@ output "exec_commands" {
 }
 
 output "server_restart_count" {
-    value = "3"
+    value = "0"
 }
 
 output "rcon_port" {
