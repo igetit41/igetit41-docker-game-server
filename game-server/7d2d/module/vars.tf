@@ -38,7 +38,8 @@ output "rcon_pw_file" {
 }
 
 output "rcon_pw_file_path" {
-    value = "./serverfiles"
+    #value = "./serverfiles"
+    value = "./serverfiles/7DaysToDieServer_Data/.."
 }
 
 output "rcon_player_check" {
