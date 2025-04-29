@@ -6,14 +6,14 @@ For the Steam Workshop list subscribe to the mods you want, put them into a coll
 
 Remember to open the required ports in your firewall.
 
-env vars before gcloud commands:
+env vars before terraform apply:
 
 export TF_VAR_PROJECT_ID=<your project id>
 export TF_VAR_PROJECT_NUM=<your project number>
 export TF_VAR_REGION=<your region>
-export TF_VAR_GAME_PORTS_TCP=<tcp ports>
-export TF_VAR_GAME_PORTS_UDP=<udp ports>
 export TF_VAR_MACHINE_TYPE=<server machine type>
+export TF_VAR_SERVER_PASSWORD=<server password>
+export TF_VAR_RCON_PASSWORD=<rcon password>
 
 
 
