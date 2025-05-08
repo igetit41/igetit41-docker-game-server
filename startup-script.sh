@@ -294,6 +294,9 @@ else
         echo "-----startup-script-output-SERVER_CHECK1-$SERVER_CHECK1"
         SERVER_CHECK2=$(sudo docker exec -i game-server pwd)
         echo "-----startup-script-output-SERVER_CHECK2-$SERVER_CHECK2"
+
+        echo "-----startup-script-output-sleep4-$CHECK_INTERVAL"
+        sleep $CHECK_INTERVAL
     done
 
     STATUS_JSON=$(curl -X GET 127.0.0.1:80/status.json)
