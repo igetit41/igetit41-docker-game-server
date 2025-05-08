@@ -317,13 +317,13 @@ else
 
         STATUS_JSON=$(curl -X GET 127.0.0.1:80/status.json)
         echo "-----startup-script-output-STATUS_JSON-$STATUS_JSON"
-        STATUS_JSON_ERROR=$(cat $STATUS_JSON | jq '.error')
+        STATUS_JSON_ERROR=$(echo $STATUS_JSON | jq '.error')
         echo "-----startup-script-output-STATUS_JSON_ERROR-$STATUS_JSON_ERROR"
-        STATUS_JSON_SERVER_NAME=$(cat $STATUS_JSON | jq '.server_name')
+        STATUS_JSON_SERVER_NAME=$(echo $STATUS_JSON | jq '.server_name')
         echo "-----startup-script-output-STATUS_JSON_SERVER_NAME-$STATUS_JSON_SERVER_NAME"
-        STATUS_JSON_PLAYERS=$(cat $STATUS_JSON | jq '.player_count')
+        STATUS_JSON_PLAYERS=$(echo $STATUS_JSON | jq '.player_count')
         echo "-----startup-script-output-STATUS_JSON_PLAYERS-$STATUS_JSON_PLAYERS"
-        STATUS_JSON_GAME_ID=$(cat $STATUS_JSON | jq '.game_id')
+        STATUS_JSON_GAME_ID=$(echo $STATUS_JSON | jq '.game_id')
         echo "-----startup-script-output-STATUS_JSON_GAME_ID-$STATUS_JSON_GAME_ID"
     done
 
@@ -333,7 +333,7 @@ else
 
         STATUS_JSON=$(curl -X GET 127.0.0.1:80/status.json)
         echo "-----startup-script-output-STATUS_JSON-$STATUS_JSON"
-        PLAYERS=$(cat $STATUS_JSON | jq '.player_count')
+        PLAYERS=$(echo $STATUS_JSON | jq '.player_count')
         echo "-----startup-script-output-PLAYERS-$PLAYERS"
 
         STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
