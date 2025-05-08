@@ -21,6 +21,10 @@ output "firewall_udp" {
     value = ["26900-26902"]
 }
 
+output "rcon_compatible" {
+    value = "true"
+}
+
 output "rcon_pw" {
     value = "${var.rcon_password}"
 }

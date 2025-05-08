@@ -63,11 +63,12 @@ resource "google_compute_instance" "game_server" {
   metadata = {
     enable-osconfig        = "TRUE"
     GAME_NAME              = module.vars.game_name
+    RCON_COMPATIBLE        = module.vars.rcon_compatible
     RCON_PW                = module.vars.rcon_pw
     RCON_OTHER_ARGS        = module.vars.rcon_other_args
     RCON_PORT              = module.vars.rcon_port
     RCON_PW_VAR            = module.vars.rcon_pw_var
-    RCON_PW_VAR_LINE      = module.vars.rcon_pw_var_line
+    RCON_PW_VAR_LINE       = module.vars.rcon_pw_var_line
     RCON_PW_FILE           = module.vars.rcon_pw_file
     RCON_PW_FILE_PATH      = module.vars.rcon_pw_file_path
     RCON_PLAYER_CHECK      = module.vars.rcon_player_check
