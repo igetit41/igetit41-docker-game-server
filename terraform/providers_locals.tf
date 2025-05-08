@@ -22,7 +22,8 @@ variable "RCON_PASSWORD" { type = string }
 
 module "vars" {
   #source = "../game-server/zomboid/module"
-  source = "../game-server/7d2d/module"
+  #source = "../game-server/7d2d/module"
+  source = "../game-server/valheim/module"
   server_password = var.SERVER_PASSWORD
   rcon_password = var.RCON_PASSWORD
 }
