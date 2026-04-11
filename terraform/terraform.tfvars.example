@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars in this directory and set real values.
+# terraform.tfvars is loaded automatically by Terraform and is gitignored.
+
+PROJECT_ID      = "your-gcp-project-id"
+PROJECT_NUM     = "your-gcp-project-number"
+REGION          = "us-central1"
+MACHINE_TYPE    = "e2-standard-4"
+SERVER_PASSWORD = "your-in-game-server-password"
+RCON_PASSWORD   = "your-rcon-password"

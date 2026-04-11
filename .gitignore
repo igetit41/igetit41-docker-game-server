@@ -1,0 +1,9 @@
+# Local Terraform variables (often contain secrets)
+terraform/terraform.tfvars
+
+# Terraform plugin cache (keep .terraform.lock.hcl committed for reproducible installs)
+terraform/.terraform/
+
+# State files if created under the repo tree
+*.tfstate
+*.tfstate.*
