@@ -30,6 +30,10 @@ From `terraform/`:
 
 State file path is configured in `terraform/providers_locals.tf` (`backend "local"`).
 
+### Ops Agent (Cloud Logging)
+
+`terraform/ops_agent.tf` enables **`osconfig.googleapis.com`** and applies the official **`ops-agent-policy`** module so VM Manager installs **Google Cloud Ops Agent** on instances in the game-server zone that carry the label **`goog-ops-agent-policy=enabled`** (set on `google_compute_instance.game_server`). The VM already sets **`enable-osconfig=TRUE`** in metadata. After `terraform apply`, allow several minutes for install, then use **Logs Explorer** (filter by instance / `resource.type="gce_instance"`) to view shipped logs.
+
 ## Future development
 
 Idle detection and auto-shutdown today live in a long-running loop inside GCE **`startup-script.sh`** (RCON `players` / game-specific checks, then `docker compose down` and `poweroff`). Compared to a separate **systemd unit** (similar to Jellyfin’s `jellyfin-auto-shutdown.service` + `ss`-based checks in another repo), the game-server approach is harder to operate and tune. Possible follow-ups:

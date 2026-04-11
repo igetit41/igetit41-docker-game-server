@@ -20,7 +20,7 @@ module "vars" {
   #source = "../_modules/7d2d/module"
   #source = "../_modules/valheim/module"
   server_password = var.SERVER_PASSWORD
-  rcon_password = var.RCON_PASSWORD
+  rcon_password   = var.RCON_PASSWORD
 }
 
 locals {

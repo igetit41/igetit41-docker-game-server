@@ -1,1 +1,1 @@
-{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"vars","Source":"../_modules/zomboid/module","Dir":"../_modules/zomboid/module"}]}
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"game_server_ops_agent_policy","Source":"registry.terraform.io/terraform-google-modules/cloud-operations/google//modules/ops-agent-policy","Version":"0.5.1","Dir":".terraform/modules/game_server_ops_agent_policy/modules/ops-agent-policy"},{"Key":"vars","Source":"../_modules/zomboid/module","Dir":"../_modules/zomboid/module"}]}

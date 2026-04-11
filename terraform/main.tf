@@ -54,19 +54,23 @@ resource "google_compute_instance" "game_server" {
 
   tags = ["game-server"]
 
+  labels = {
+    "goog-ops-agent-policy" = "enabled"
+  }
+
   boot_disk {
     initialize_params {
       labels                = {}
       resource_manager_tags = {}
       #image                 = "ubuntu-os-cloud/ubuntu-2004-lts"
-      image                 = "ubuntu-os-cloud/ubuntu-2004-focal-v20250313"
-      size                  = 100
-      type                  = "pd-balanced"
+      image = "ubuntu-os-cloud/ubuntu-2004-focal-v20250313"
+      size  = 100
+      type  = "pd-balanced"
     }
   }
 
   network_interface {
-    subnetwork = format("%s%s%s%s%s","/projects/", local.project_id, "/regions/", local.region, "/subnetworks/default")
+    subnetwork = format("%s%s%s%s%s", "/projects/", local.project_id, "/regions/", local.region, "/subnetworks/default")
     access_config {
       nat_ip       = google_compute_address.game_server_ip.address
       network_tier = "STANDARD"
@@ -94,18 +98,18 @@ resource "google_compute_instance" "game_server" {
     SERVER_RESTART_COUNT   = module.vars.server_restart_count
   }
 
-  metadata_startup_script = "${file("../startup-script.sh")}"
+  metadata_startup_script = file("../startup-script.sh")
 
   service_account {
-    email  = format("%s%s", local.project_num, "-compute@developer.gserviceaccount.com")
+    email = format("%s%s", local.project_num, "-compute@developer.gserviceaccount.com")
     scopes = [
-        "https://www.googleapis.com/auth/devstorage.read_only",
-        "https://www.googleapis.com/auth/logging.write",
-        "https://www.googleapis.com/auth/monitoring.write",
-        "https://www.googleapis.com/auth/service.management.readonly",
-        "https://www.googleapis.com/auth/servicecontrol",
-        "https://www.googleapis.com/auth/trace.append",
-      ]
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring.write",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append",
+    ]
   }
 }
 
