@@ -67,8 +67,9 @@ output "rcon_reload" {
     value = "[\"reloadlua './Zomboid/Server/channel27_SandboxVars.lua'\"]"
 }
 
+# Semicolon-separated: startup-script.sh uses IFS=';' to split EXEC_COMMANDS before docker exec bash -c.
 output "exec_commands" {
-    value = "['sed -i -E \"s/    CharacterFreePoints = [0-9]+,/    CharacterFreePoints = 12,/g\" ./Zomboid/Server/channel27_SandboxVars.lua', 'sed -i -E \"s/    StarterKit = false,/    StarterKit = true,/g\" ./Zomboid/Server/channel27_SandboxVars.lua']"
+    value = "sed -i '/CharacterFreePoints[[:space:]]*=/s/.*/    CharacterFreePoints = 12,/' ./Zomboid/Server/channel27_SandboxVars.lua;sed -i '/StarterKit[[:space:]]*=/s/.*/    StarterKit = true,/' ./Zomboid/Server/channel27_SandboxVars.lua"
 }
 
 output "server_restart_count" {
