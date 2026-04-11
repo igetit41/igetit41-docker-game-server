@@ -68,7 +68,7 @@ output "rcon_reload" {
 }
 
 output "exec_commands" {
-    value = "['sed -i \"s/    CharacterFreePoints = 0,/    CharacterFreePoints = 4,/g\" ./Zomboid/Server/channel27_SandboxVars.lua', 'sed -i \"s/    StarterKit = false,/    StarterKit = true,/g\" ./Zomboid/Server/channel27_SandboxVars.lua']"
+    value = "['sed -i -E \"s/    CharacterFreePoints = [0-9]+,/    CharacterFreePoints = 12,/g\" ./Zomboid/Server/channel27_SandboxVars.lua', 'sed -i -E \"s/    StarterKit = false,/    StarterKit = true,/g\" ./Zomboid/Server/channel27_SandboxVars.lua']"
 }
 
 output "server_restart_count" {

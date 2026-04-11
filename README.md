@@ -45,6 +45,7 @@ Idle detection and auto-shutdown today live in a long-running loop inside GCE **
 - **Dedicated service account + IAM** for the game VM (instead of the default compute service account), with least-privilege bindings—similar to workload-specific SAs on other GCP projects.
 - **Startup script robustness:** `set -e` (or equivalent fail-fast behavior) and centralized boot logging (e.g. `tee` to `/var/log/startup-script.log`) so failures surface clearly and logs are easy to find on the instance.
 - **Metadata-driven tuning from Terraform:** pass idle-related values such as **`CHECK_INTERVAL`** / **`IDLE_COUNT`** (or wall-clock equivalents) through instance metadata instead of hardcoding them in `startup-script.sh`; optionally extend to other knobs (e.g. image/branch hints) for parity with metadata-driven config on other stacks.
+- **Server-agnostic Terraform + per-game config files:** keep root **`terraform.tfvars`** (or equivalent) limited to **project/infra** inputs (`PROJECT_ID`, region, machine type, which game module). Put **game-specific** settings (server name, Steam branch, **`WORKSHOP_IDS`**, join/admin passwords, RCON, etc.) in **`_modules/<game>/`** as a **committed example** (e.g. `server.config.example.yaml` and/or `server.auto.tfvars.example`) plus a **gitignored local file** users copy and fill in; load via **`yamldecode(file(...))`**, **`-var-file=...`**, or a typed **`game_config`** object. Align or generate **`compose.yaml`** from that source of truth so credentials are not only hardcoded in compose.
 
 ## References
 
