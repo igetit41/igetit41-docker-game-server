@@ -3,8 +3,8 @@ Description=game-server
 
 [Service]
 User=game-server
-WorkingDirectory=/home/game-server/igetit41-docker-game-server/game-server
-ExecStart=/home/game-server/igetit41-docker-game-server/game-server/game-server.sh
+WorkingDirectory=/home/game-server
+ExecStart=/bin/bash -c 'SCRIPT=/home/game-server/igetit41-docker-game-server/_modules/game-server.sh; [ -x "$SCRIPT" ] || SCRIPT=/home/game-server/_modules/game-server.sh; exec "$SCRIPT"'
 Restart=on-failure
 
 [Install]

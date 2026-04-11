@@ -26,6 +26,19 @@ resource "google_compute_firewall" "game-server" {
   }
 }
 
+resource "google_compute_firewall" "iap-ssh" {
+  name          = "allow-iap-ssh"
+  network       = data.google_compute_network.default.name
+  project       = local.project_id
+  target_tags   = ["game-server"]
+  source_ranges = ["35.235.240.0/20"]
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+}
+
 resource "google_compute_address" "game_server_ip" {
   name         = "game-server"
   address_type = "EXTERNAL"

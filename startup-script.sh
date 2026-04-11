@@ -38,8 +38,22 @@ RCON_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instanc
 EXEC_COMMANDS=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/EXEC_COMMANDS" -H "Metadata-Flavor: Google")
 RCON_RELOAD=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_RELOAD" -H "Metadata-Flavor: Google")
 SERVER_RESTART_COUNT=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SERVER_RESTART_COUNT" -H "Metadata-Flavor: Google")
+GAME_NAME=$(curl -sf "http://metadata.google.internal/computeMetadata/v1/instance/attributes/GAME_NAME" -H "Metadata-Flavor: Google")
+GAME_NAME=${GAME_NAME:-zomboid}
 
-if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
+STANDARD_REPO=/home/game-server/igetit41-docker-game-server
+FLAT_REPO=/home/game-server
+if [ -f "$STANDARD_REPO/_modules/zomboid/compose.yaml" ] || [ -f "$STANDARD_REPO/_modules/valheim/compose.yaml" ] || [ -f "$STANDARD_REPO/_modules/7d2d/compose.yaml" ]; then
+  REPO_ROOT=$STANDARD_REPO
+elif [ -f "$FLAT_REPO/_modules/zomboid/compose.yaml" ] || [ -f "$FLAT_REPO/_modules/valheim/compose.yaml" ] || [ -f "$FLAT_REPO/_modules/7d2d/compose.yaml" ]; then
+  REPO_ROOT=$FLAT_REPO
+else
+  REPO_ROOT=$STANDARD_REPO
+fi
+
+COMPOSE_FILE="$REPO_ROOT/_modules/$GAME_NAME/compose.yaml"
+
+if [ ! -f "$COMPOSE_FILE" ]; then
     echo "-----startup-script-output-first-run"
     FIRST_RUN=true
     RESTART_COUNT=$SERVER_RESTART_COUNT
@@ -87,13 +101,32 @@ if [ ! -d /home/game-server/igetit41-docker-game-server ]; then
     # Clone Repo
     echo "-----startup-script-output-clone-repo"
     sudo -H -u game-server bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
-    sudo git config --global --add safe.directory /home/game-server/igetit41-docker-game-server
+    sudo git config --global --add safe.directory "$REPO_ROOT"
 
-    sudo chmod +x /home/game-server/igetit41-docker-game-server/game-server/*.sh
-    sudo chmod +x /home/game-server/igetit41-docker-game-server/*.sh
-    sudo cp /home/game-server/igetit41-docker-game-server/game-server/game-server.service /etc/systemd/system/game-server.service
+    sudo chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
+    sudo chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
+    sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
 
     echo "-----startup-script-output-start-server"
+    sudo systemctl daemon-reload
+    sudo systemctl enable game-server
+    sudo systemctl restart game-server
+fi
+
+if [ -f "$STANDARD_REPO/_modules/$GAME_NAME/compose.yaml" ]; then
+  REPO_ROOT=$STANDARD_REPO
+elif [ -f "$FLAT_REPO/_modules/$GAME_NAME/compose.yaml" ]; then
+  REPO_ROOT=$FLAT_REPO
+fi
+COMPOSE_FILE="$REPO_ROOT/_modules/$GAME_NAME/compose.yaml"
+
+# Flat clone (repo in /home/game-server) skips first-run; still install systemd + start container
+if [ -f "$COMPOSE_FILE" ] && [ ! -f /etc/systemd/system/game-server.service ]; then
+    echo "-----startup-script-output-install-systemd-missed-first-run"
+    sudo chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
+    sudo chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
+    sudo git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
+    sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
     sudo systemctl restart game-server
@@ -260,7 +293,7 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
         
         if [ $COUNT -gt $IDLE_COUNT ]; then
             echo "-----startup-script-output-$STAMP-shutting-down"
-            sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
+            sudo docker compose --file "$COMPOSE_FILE" down
             sudo poweroff
             break
         fi
@@ -355,7 +388,7 @@ else
         
         if [ $COUNT -gt $IDLE_COUNT ]; then
             echo "-----startup-script-output-$STAMP-shutting-down"
-            sudo docker compose --file /home/game-server/igetit41-docker-game-server/game-server/compose.yaml down
+            sudo docker compose --file "$COMPOSE_FILE" down
             sudo poweroff
             break
         fi
