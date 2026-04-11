@@ -47,9 +47,10 @@ output "rcon_player_check" {
     value = "players"
 }
 
-# Extract count from PZ lines like "Players connected (1):" — was empty, so PLAYERS2 stayed blank and COUNT never reset.
+# Extract count from PZ lines like "Players connected (1):". Must be a single command — startup-script uses
+# `echo "$PLAYERS1" | $RCON_PLAYER_CHECK_GREP` with unquoted expansion, so `| head -1` breaks the pipeline.
 output "rcon_player_check_grep" {
-    value = "grep -Eo '[0-9]+' | head -1"
+    value = "grep -Eo '[0-9]+'"
 }
 
 output "rcon_live_test" {
