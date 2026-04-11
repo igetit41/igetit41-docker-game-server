@@ -24,9 +24,6 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=2816646537
 https://steamcommunity.com/sharedfiles/filedetails/?id=3290232938
 https://steamcommunity.com/sharedfiles/filedetails/?id=2946364542
 https://steamcommunity.com/sharedfiles/filedetails/?id=3197857648
-
-
-new:
 https://steamcommunity.com/sharedfiles/filedetails/?id=3388028737
 https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298
 https://steamcommunity.com/sharedfiles/filedetails/?id=3388017161
@@ -50,10 +47,22 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=3402516345
 https://steamcommunity.com/sharedfiles/filedetails/?id=3490188370
 https://steamcommunity.com/sharedfiles/filedetails/?id=3470659758
 https://steamcommunity.com/sharedfiles/filedetails/?id=3502080466
+https://steamcommunity.com/sharedfiles/filedetails/?id=3508537032
+https://steamcommunity.com/sharedfiles/filedetails/?id=3171167894
 
 
 
+sudo systemctl status docker --no-pager
+sudo docker ps
+sudo docker logs game-server --tail 80
+sudo systemctl status game-server --no-pager
+sudo journalctl -u game-server -n 50 --no-pager
+sudo grep -i "startup-script\|google_metadata" /var/log/syslog | tail -30
+sudo ls -la /var/log/syslog
 
+
+getent passwd game-server
+ls -la /home/game-server/igetit41-docker-game-server 2>/dev/null || ls -la /home/game-server/
 
 
 

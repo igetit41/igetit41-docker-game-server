@@ -30,6 +30,18 @@ From `terraform/`:
 
 State file path is configured in `terraform/providers_locals.tf` (`backend "local"`).
 
+## Future development
+
+Idle detection and auto-shutdown today live in a long-running loop inside GCE **`startup-script.sh`** (RCON `players` / game-specific checks, then `docker compose down` and `poweroff`). Compared to a separate **systemd unit** (similar to Jellyfin’s `jellyfin-auto-shutdown.service` + `ss`-based checks in another repo), the game-server approach is harder to operate and tune. Possible follow-ups:
+
+- **Dedicated systemd service** for idle shutdown only: `Restart=always`, logs under `journalctl -u …`, enable/disable without re-running the full startup script.
+- **Keep RCON (or game-native) player queries** as the idle signal—they match “no one playing” better than raw socket counts on game UDP/TCP ports.
+- **Harden player-count parsing** for Zomboid (e.g. explicit `rcon_player_check_grep` / less brittle than stripping digits from arbitrary RCON text when the game updates).
+- **Optional wall-clock idle** (“minutes since last non-zero player count”) as an alternative or complement to consecutive empty **`COUNT`** intervals (`CHECK_INTERVAL` × `IDLE_COUNT`).
+- **Dedicated service account + IAM** for the game VM (instead of the default compute service account), with least-privilege bindings—similar to workload-specific SAs on other GCP projects.
+- **Startup script robustness:** `set -e` (or equivalent fail-fast behavior) and centralized boot logging (e.g. `tee` to `/var/log/startup-script.log`) so failures surface clearly and logs are easy to find on the instance.
+- **Metadata-driven tuning from Terraform:** pass idle-related values such as **`CHECK_INTERVAL`** / **`IDLE_COUNT`** (or wall-clock equivalents) through instance metadata instead of hardcoding them in `startup-script.sh`; optionally extend to other knobs (e.g. image/branch hints) for parity with metadata-driven config on other stacks.
+
 ## References
 
 - [gorcon/rcon-cli](https://github.com/gorcon/rcon-cli) (used by the startup script inside the game container where applicable)
