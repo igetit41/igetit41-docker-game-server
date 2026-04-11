@@ -23,5 +23,16 @@ chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
 chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
 sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
 
+if [ "$GAME_NAME" = "zomboid" ]; then
+  echo "-----game-server-output-zomboid-data-perms"
+  ZOMBOID_DIR="$REPO_ROOT/_modules/zomboid"
+  mkdir -p "$ZOMBOID_DIR/data" "$ZOMBOID_DIR/workshop-mods"
+  docker run --rm \
+    -v "$ZOMBOID_DIR/data:/zdata" \
+    -v "$ZOMBOID_DIR/workshop-mods:/zwork" \
+    alpine:3.19 \
+    sh -c 'chown -R 1000:1000 /zdata /zwork'
+fi
+
 echo "-----game-server-output-docker-compose"
 docker compose --file "$COMPOSE_FILE" up -d
