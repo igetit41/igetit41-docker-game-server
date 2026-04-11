@@ -178,16 +178,6 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
 
             UPDATE_PASSWORD=$(sudo docker exec -i game-server bash -c "sed -i 's|^.*$RCON_PW_VAR.*|$RCON_PW_VAR_LINE|g' $RCON_PW_FILE_PATH/$RCON_PW_FILE")
             echo "-----startup-script-output-UPDATE_PASSWORD: $UPDATE_PASSWORD"
-            
-            IFS_OLD=$IFS
-            IFS=';' read -ra COMMANDS <<< "$EXEC_COMMANDS"
-            for COMMAND in "${COMMANDS[@]}";
-            do
-                echo "-----startup-script-output-EXEC_COMMAND: $COMMAND"
-                EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$COMMAND")
-                echo "-----startup-script-output-EXEC_COMMAND_OUTPUT: $EXEC_COMMAND_OUTPUT"
-            done
-            IFS=$IFS_OLD
 
         else
             echo "-----startup-script-output-sleep4-$CHECK_INTERVAL"
@@ -201,6 +191,21 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
         #PASSWORD_CHECK=$(sudo docker exec -i game-server cat $RCON_PW_FILE_PATH/$RCON_PW_FILE | grep $RCON_PW_VAR)
         echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
     done
+
+    # Once per boot after RCON password is valid — not only when this loop had to rewrite the ini.
+    if [[ -n "$EXEC_COMMANDS" ]]; then
+        echo "-----startup-script-output-exec-commands-begin"
+        IFS_OLD=$IFS
+        IFS=';' read -ra EXEC_CMDS <<< "$EXEC_COMMANDS"
+        for EXEC_ONE in "${EXEC_CMDS[@]}"; do
+            [[ -z "$EXEC_ONE" ]] && continue
+            echo "-----startup-script-output-EXEC_COMMAND: $EXEC_ONE"
+            EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$EXEC_ONE")
+            echo "-----startup-script-output-EXEC_COMMAND_OUTPUT: $EXEC_COMMAND_OUTPUT"
+        done
+        IFS=$IFS_OLD
+        echo "-----startup-script-output-exec-commands-end"
+    fi
 
     while [[ $RESTART_COUNT -gt "0" ]]; do
         echo "-----startup-script-output-game-server-restart"
