@@ -65,5 +65,6 @@ getent passwd game-server
 ls -la /home/game-server/igetit41-docker-game-server 2>/dev/null || ls -la /home/game-server/
 
 
-
-
+sudo docker exec game-server sh -c 'ls -la /home/steam/Zomboid/Server 2>&1; find /home/steam/Zomboid -name "channel27.ini" 2>/dev/null'
+sudo docker logs game-server --tail 100
+sudo grep -i "startup-script" /var/log/syslog | tail -40

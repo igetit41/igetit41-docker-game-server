@@ -269,13 +269,11 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
 
     # Main loop
     while true; do
-        echo "-----startup-script-output-player-check"
         #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
         PLAYERS1=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_PLAYER_CHECK")
-        echo "-----startup-script-output-player-check-PLAYERS1: $PLAYERS1"
         PLAYERS2=$(echo "$PLAYERS1" | $RCON_PLAYER_CHECK_GREP)
-        echo "-----startup-script-output-player-check-PLAYERS2: $PLAYERS2"
         PLAYERS=$(echo "$PLAYERS2" | tr -cd '[:digit:].')
+        echo "-----startup-script-output-player-check rcon=\"$(echo "$PLAYERS1" | tr '\n\r' ' ')\" filtered=\"$PLAYERS2\""
         #PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS $RCON_PLAYER_CHECK)
         STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
         echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"

@@ -47,8 +47,9 @@ output "rcon_player_check" {
     value = "players"
 }
 
+# Extract count from PZ lines like "Players connected (1):" — was empty, so PLAYERS2 stayed blank and COUNT never reset.
 output "rcon_player_check_grep" {
-    value = ""
+    value = "grep -Eo '[0-9]+' | head -1"
 }
 
 output "rcon_live_test" {
