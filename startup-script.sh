@@ -200,10 +200,17 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
         for EXEC_ONE in "${EXEC_CMDS[@]}"; do
             [[ -z "$EXEC_ONE" ]] && continue
             echo "-----startup-script-output-EXEC_COMMAND: $EXEC_ONE"
-            EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$EXEC_ONE")
+            # sed -i prints nothing on success; capture stderr and exit code so syslog shows failures.
+            EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$EXEC_ONE" 2>&1)
+            EXEC_COMMAND_EC=$?
+            echo "-----startup-script-output-EXEC_COMMAND_EXIT: $EXEC_COMMAND_EC"
             echo "-----startup-script-output-EXEC_COMMAND_OUTPUT: $EXEC_COMMAND_OUTPUT"
         done
         IFS=$IFS_OLD
+        if [[ "$GAME_NAME" == "zomboid" ]]; then
+            EXEC_POST=$(sudo docker exec -i game-server bash -c "grep -E 'CharacterFreePoints|StarterKit' ./Zomboid/Server/channel27_SandboxVars.lua" 2>&1) || true
+            echo "-----startup-script-output-EXEC_COMMANDS_SANDBOX_SNAPSHOT: $EXEC_POST"
+        fi
         echo "-----startup-script-output-exec-commands-end"
     fi
 
@@ -219,7 +226,7 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
         echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
         
-        GAMESERVER_RUNNING=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST")" | $RCON_LIVE_TEST_GREP)
+        GAMESERVER_RUNNING=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST")" | bash -c "$RCON_LIVE_TEST_GREP")
         echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
         
         LOOP_VAR=0
@@ -230,7 +237,7 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
             echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
             sleep $CHECK_INTERVAL
         
-            GAMESERVER_RUNNING=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST")" | $RCON_LIVE_TEST_GREP)
+            GAMESERVER_RUNNING=$(echo "$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST")" | bash -c "$RCON_LIVE_TEST_GREP")
             echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
         done
     done
@@ -257,7 +264,7 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
         IFS=$IFS_OLD
     fi
 
-    GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST") | $RCON_LIVE_TEST_GREP)
+    GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST") | bash -c "$RCON_LIVE_TEST_GREP")
     echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
 
     LOOP_VAR=0
@@ -268,7 +275,7 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
         echo "-----startup-script-output-sleep2-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
         
-        GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST") | $RCON_LIVE_TEST_GREP)
+        GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST") | bash -c "$RCON_LIVE_TEST_GREP")
         echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     done
 
@@ -276,7 +283,11 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
     while true; do
         #PLAYERS=$(sudo /home/game-server/igetit41-docker-game-server/player-check.sh)
         PLAYERS1=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_PLAYER_CHECK")
-        PLAYERS2=$(echo "$PLAYERS1" | $RCON_PLAYER_CHECK_GREP)
+        # Metadata-held filter must run under bash -c so '|' and regex quoting are real pipelines (not extra grep args).
+        PLAYERS2=$(echo "$PLAYERS1" | bash -c "$RCON_PLAYER_CHECK_GREP")
+        if [[ -z "$PLAYERS2" ]]; then
+            PLAYERS2=$(echo "$PLAYERS1" | grep -oE '[0-9]+' | head -n1)
+        fi
         PLAYERS=$(echo "$PLAYERS2" | tr -cd '[:digit:].')
         echo "-----startup-script-output-player-check rcon=\"$(echo "$PLAYERS1" | tr '\n\r' ' ')\" filtered=\"$PLAYERS2\""
         #PLAYERS=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS $RCON_PLAYER_CHECK)
