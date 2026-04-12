@@ -7,6 +7,3 @@ terraform/.terraform/
 # State files if created under the repo tree
 *.tfstate
 *.tfstate.*
-
-# Zomboid host bind mounts (large; never commit)
-_modules/zomboid/pz-dedicated/

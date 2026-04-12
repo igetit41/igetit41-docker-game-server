@@ -34,7 +34,9 @@ services:
       - WORKSHOP_IDS=2553809727;2956146279;3020323164;2804531012;3000725405;2920899878;2903771337;2901962885;2871469707;3360392628;2944344655;2710167561;3056481712;3370497379;2972289937;2816646537;3290232938;2946364542;3197857648;3388028737;3388017161;3446510982;3444499190;2950902979;3342191739;3406392630;2650547917;2847184718;3465040406;3404461962;3330403100;2618566294;3485349033;3417502641;3418061837;3394588830;3402516345;3490188370;3470659758;3502080466;3508537032;3171167894
     volumes:
       - ./data:/home/steam/Zomboid
-      # Persist full Steam dedicated install (~6GB). Without this, compose down removes the container layer
-      # and every boot redownloads/commits from scratch (very slow on standard GCP disks).
-      - ./pz-dedicated:/home/steam/pz-dedicated
+      # Named volume: Docker seeds from image on first use, persists across compose down/up.
+      - pz-dedicated:/home/steam/pz-dedicated
       - ./workshop-mods:/home/steam/pz-dedicated/steamapps/workshop
+
+volumes:
+  pz-dedicated:
