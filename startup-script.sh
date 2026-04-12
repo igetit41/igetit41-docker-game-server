@@ -192,28 +192,6 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
         echo "-----startup-script-output-PASSWORD_CHECK-$PASSWORD_CHECK"
     done
 
-    # Once per boot after RCON password is valid — not only when this loop had to rewrite the ini.
-    if [[ -n "$EXEC_COMMANDS" ]]; then
-        echo "-----startup-script-output-exec-commands-begin"
-        IFS_OLD=$IFS
-        IFS=';' read -ra EXEC_CMDS <<< "$EXEC_COMMANDS"
-        for EXEC_ONE in "${EXEC_CMDS[@]}"; do
-            [[ -z "$EXEC_ONE" ]] && continue
-            echo "-----startup-script-output-EXEC_COMMAND: $EXEC_ONE"
-            # sed -i prints nothing on success; capture stderr and exit code so syslog shows failures.
-            EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$EXEC_ONE" 2>&1)
-            EXEC_COMMAND_EC=$?
-            echo "-----startup-script-output-EXEC_COMMAND_EXIT: $EXEC_COMMAND_EC"
-            echo "-----startup-script-output-EXEC_COMMAND_OUTPUT: $EXEC_COMMAND_OUTPUT"
-        done
-        IFS=$IFS_OLD
-        if [[ "$GAME_NAME" == "zomboid" ]]; then
-            EXEC_POST=$(sudo docker exec -i game-server bash -c "grep -E 'CharacterFreePoints|StarterKit' ./Zomboid/Server/channel27_SandboxVars.lua" 2>&1) || true
-            echo "-----startup-script-output-EXEC_COMMANDS_SANDBOX_SNAPSHOT: $EXEC_POST"
-        fi
-        echo "-----startup-script-output-exec-commands-end"
-    fi
-
     while [[ $RESTART_COUNT -gt "0" ]]; do
         echo "-----startup-script-output-game-server-restart"
         #RESTART_OUTPUT=$(sudo systemctl restart game-server)
@@ -278,6 +256,36 @@ if [[ "$RCON_COMPATIBLE" == "true" ]]; then
         GAMESERVER_RUNNING=$(echo $(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_LIVE_TEST") | bash -c "$RCON_LIVE_TEST_GREP")
         echo "-----startup-script-output-GAMESERVER_RUNNING-$GAMESERVER_RUNNING"
     done
+
+    # Run EXEC_COMMANDS after server is confirmed up (config files exist by now).
+    if [[ -n "$EXEC_COMMANDS" ]]; then
+        echo "-----startup-script-output-exec-commands-begin"
+        IFS_OLD=$IFS
+        IFS=';' read -ra EXEC_CMDS <<< "$EXEC_COMMANDS"
+        for EXEC_ONE in "${EXEC_CMDS[@]}"; do
+            [[ -z "$EXEC_ONE" ]] && continue
+            echo "-----startup-script-output-EXEC_COMMAND: $EXEC_ONE"
+            EXEC_COMMAND_OUTPUT=$(sudo docker exec -i game-server bash -c "$EXEC_ONE" 2>&1)
+            EXEC_COMMAND_EC=$?
+            echo "-----startup-script-output-EXEC_COMMAND_EXIT: $EXEC_COMMAND_EC"
+            echo "-----startup-script-output-EXEC_COMMAND_OUTPUT: $EXEC_COMMAND_OUTPUT"
+        done
+        IFS=$IFS_OLD
+        if [[ "$GAME_NAME" == "zomboid" ]]; then
+            EXEC_POST=$(sudo docker exec -i game-server bash -c "grep -E 'CharacterFreePoints|StarterKit' ./Zomboid/Server/channel27_SandboxVars.lua" 2>&1) || true
+            echo "-----startup-script-output-EXEC_COMMANDS_SANDBOX_SNAPSHOT: $EXEC_POST"
+        fi
+        echo "-----startup-script-output-exec-commands-end"
+
+        IFS_OLD=$IFS
+        IFS=';' read -ra COMMANDS <<< "$RCON_RELOAD"
+        for COMMAND in "${COMMANDS[@]}"; do
+            echo "-----startup-script-output-RCON_RELOAD: $COMMAND"
+            RCON_RELOAD_OUTPUT=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$COMMAND")
+            echo "-----startup-script-output-RCON_RELOAD_OUTPUT: $RCON_RELOAD_OUTPUT"
+        done
+        IFS=$IFS_OLD
+    fi
 
     # Main loop
     while true; do
