@@ -19,9 +19,7 @@ services:
       - ADMINUSERNAME=admin
       - ADMINPASSWORD=groovyfunky
       - STEAMAPPBRANCH=unstable
-      # false = skip Steam validate/update on every start (fast boot once ./pz-dedicated is populated).
-      # Set true temporarily when you need to pull a new dedicated-server build, then set back to false.
-      - FORCEUPDATE=false
+      - FORCEUPDATE=true
       - MEMORY=8096m
       - CACHEDIR=/home/steam/Zomboid
       - LANG=en_EN.UTF-8
