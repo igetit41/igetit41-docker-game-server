@@ -74,25 +74,37 @@ sudo grep 'startup-script' /var/log/syslog | grep -E 'player-check|PLAYERS|COUNT
 
         "sed -i '/CharacterFreePoints/s/.*/    CharacterFreePoints = 12,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/StarterKit/s/.*/    StarterKit = true,/' ./Zomboid/Server/channel27_SandboxVars.lua",
-        "sed -i '/MinutesPerPage/s/.*/    MinutesPerPage = 0.5,/' ./Zomboid/Server/channel27_SandboxVars.lua",
+        "sed -i '/StarterKit/s/.*/    StarterKit = true,\n    MaximumDismantlingXpLevel = 10,\n    XpMultiplier = 4,/' ./Zomboid/Server/channel27_SandboxVars.lua",
+        "sed -i '/MinutesPerPage/s/.*/    MinutesPerPage = 0.1,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/WaterShutModifier/s/.*/    WaterShutModifier = 120,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/ElecShutModifier/s/.*/    ElecShutModifier = 60,/' ./Zomboid/Server/channel27_SandboxVars.lua",
+        "sed -i '/^SleepAllowed/s/.*/SleepAllowed=true/' ./Zomboid/Server/channel27.ini",
 
 
-sudo docker exec game-server grep -nE 'CharacterFreePoints|StarterKit|MinutesPerPage|WaterShutModifier|ElecShutModifier' /home/steam/Zomboid/Server/channel27_SandboxVars.lua
+sudo docker exec game-server grep -nE 'CharacterFreePoints|StarterKit|MinutesPerPage|WaterShutModifier|ElecShutModifier|MaximumDismantlingXpLevel|SleepAllowed|XpMultiplier' /home/steam/Zomboid/Server/channel27_SandboxVars.lua
+
+sudo docker exec game-server ls /home/steam/Zomboid/Server
 
 sudo docker exec game-server sed -i \
   -e '/CharacterFreePoints/s/.*/    CharacterFreePoints = 12,/' \
-  -e '/StarterKit/s/.*/    StarterKit = true,/' \
-  -e '/MinutesPerPage/s/.*/    MinutesPerPage = 0.5,/' \
+  -e '/StarterKit/s/.*/    StarterKit = true,\n    MaximumDismantlingXpLevel = 10,\n    XpMultiplier = 4,/' \
+  -e '/MinutesPerPage/s/.*/    MinutesPerPage = 0.1,/' \
   -e '/WaterShutModifier/s/.*/    WaterShutModifier = 120,/' \
   -e '/ElecShutModifier/s/.*/    ElecShutModifier = 60,/' \
   /home/steam/Zomboid/Server/channel27_SandboxVars.lua
 
 
 
+sudo docker exec game-server grep -nE 'SleepAllowed|XpMultiplier' /home/steam/Zomboid/Server/channel27.ini
+
+sudo docker exec game-server sed -i \
+  -e '/SleepAllowed/s/.*/SleepAllowed=true/' \
+  /home/steam/Zomboid/Server/channel27.ini
+
+sudo docker exec game-server cat ./Zomboid/Server/channel27_SandboxVars.lua
+
 sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
   -a 127.0.0.1:27015 \
   -p 'parK87liMe24' \
-  "setaccesslevel D3F1L3 none"
+  "setaccesslevel D3F1L3 user"
 
