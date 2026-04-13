@@ -74,6 +74,9 @@ output "exec_commands" {
     value = join(";", [
         "sed -i '/CharacterFreePoints/s/.*/    CharacterFreePoints = 12,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/StarterKit/s/.*/    StarterKit = true,/' ./Zomboid/Server/channel27_SandboxVars.lua",
+        "sed -i '/MinutesPerPage/s/.*/    MinutesPerPage = 0.5,/' ./Zomboid/Server/channel27_SandboxVars.lua",
+        "sed -i '/WaterShutModifier/s/.*/    WaterShutModifier = 120,/' ./Zomboid/Server/channel27_SandboxVars.lua",
+        "sed -i '/ElecShutModifier/s/.*/    ElecShutModifier = 60,/' ./Zomboid/Server/channel27_SandboxVars.lua",
     ])
 }
 
