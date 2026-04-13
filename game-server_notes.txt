@@ -95,7 +95,7 @@ sudo docker exec game-server sed -i \
 
 
 
-sudo docker exec game-server grep -nE 'SleepAllowed|XpMultiplier' /home/steam/Zomboid/Server/channel27.ini
+sudo docker exec game-server grep -nE 'SleepAllowed' /home/steam/Zomboid/Server/channel27.ini
 
 sudo docker exec game-server sed -i \
   -e '/SleepAllowed/s/.*/SleepAllowed=true/' \
