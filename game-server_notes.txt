@@ -73,7 +73,6 @@ sudo grep 'startup-script' /var/log/syslog | grep -E 'player-check|PLAYERS|COUNT
 
 
         "sed -i '/CharacterFreePoints/s/.*/    CharacterFreePoints = 12,/' ./Zomboid/Server/channel27_SandboxVars.lua",
-        "sed -i '/StarterKit/s/.*/    StarterKit = true,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/StarterKit/s/.*/    StarterKit = true,\n    MaximumDismantlingXpLevel = 10,\n    XpMultiplier = 4,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/MinutesPerPage/s/.*/    MinutesPerPage = 0.1,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/WaterShutModifier/s/.*/    WaterShutModifier = 120,/' ./Zomboid/Server/channel27_SandboxVars.lua",
@@ -106,9 +105,9 @@ sudo docker exec game-server cat /home/steam/Zomboid/Server/channel27_SandboxVar
 sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
   -a 127.0.0.1:27015 \
   -p 'parK87liMe24' \
-  "setaccesslevel D3F1L3 admin"
+  "setaccesslevel D3F1L3 user"
 
-sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p 'parK87liMe24' "reloadlua"
+sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p 'parK87liMe24' "reloadlua channel27_SandboxVars.lua"
 
 sudo docker restart game-server
 

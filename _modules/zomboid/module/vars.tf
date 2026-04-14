@@ -77,6 +77,7 @@ output "exec_commands" {
         "sed -i '/MinutesPerPage/s/.*/    MinutesPerPage = 0.1,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/WaterShutModifier/s/.*/    WaterShutModifier = 120,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/ElecShutModifier/s/.*/    ElecShutModifier = 60,/' ./Zomboid/Server/channel27_SandboxVars.lua",
+        "sed -i '/Transmission/s/.*/    Transmission = 3,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/^SleepAllowed/s/.*/SleepAllowed=true/' ./Zomboid/Server/channel27.ini",
     ])
 }
