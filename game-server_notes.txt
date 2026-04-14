@@ -101,10 +101,15 @@ sudo docker exec game-server sed -i \
   -e '/SleepAllowed/s/.*/SleepAllowed=true/' \
   /home/steam/Zomboid/Server/channel27.ini
 
-sudo docker exec game-server cat ./Zomboid/Server/channel27_SandboxVars.lua
+sudo docker exec game-server cat /home/steam/Zomboid/Server/channel27_SandboxVars.lua
 
 sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
   -a 127.0.0.1:27015 \
   -p 'parK87liMe24' \
-  "setaccesslevel D3F1L3 user"
+  "setaccesslevel D3F1L3 admin"
+
+sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p 'parK87liMe24' "reloadlua"
+
+sudo docker restart game-server
+
 

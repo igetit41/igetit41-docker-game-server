@@ -66,14 +66,13 @@ output "rcon_commands" {
 }
 
 output "rcon_reload" {
-    value = "[\"reloadlua './Zomboid/Server/channel27_SandboxVars.lua'\"]"
+    value = "[\"reloadlua channel27_SandboxVars.lua\"]"
 }
 
 # Semicolon-separated list; startup-script splits on ';' and runs each entry in its own docker exec.
 output "exec_commands" {
     value = join(";", [
         "sed -i '/CharacterFreePoints/s/.*/    CharacterFreePoints = 12,/' ./Zomboid/Server/channel27_SandboxVars.lua",
-        "sed -i '/StarterKit/s/.*/    StarterKit = true,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/StarterKit/s/.*/    StarterKit = true,\\n    MaximumDismantlingXpLevel = 10,\\n    XpMultiplier = 4,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/MinutesPerPage/s/.*/    MinutesPerPage = 0.1,/' ./Zomboid/Server/channel27_SandboxVars.lua",
         "sed -i '/WaterShutModifier/s/.*/    WaterShutModifier = 120,/' ./Zomboid/Server/channel27_SandboxVars.lua",
