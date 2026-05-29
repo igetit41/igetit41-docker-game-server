@@ -10,3 +10,7 @@ terraform/.terraform/
 # State files if created under the repo tree
 *.tfstate
 *.tfstate.*
+
+*/*.env
+*/*.tfvars
+*/*_notes.txt
