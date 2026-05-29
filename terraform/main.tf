@@ -80,6 +80,7 @@ resource "google_compute_instance" "game_server" {
   metadata = {
     enable-osconfig        = "TRUE"
     GAME_NAME              = module.vars.game_name
+    SERVER_PASSWORD        = var.SERVER_PASSWORD
     RCON_COMPATIBLE        = module.vars.rcon_compatible
     RCON_PW                = module.vars.rcon_pw
     RCON_OTHER_ARGS        = module.vars.rcon_other_args
@@ -98,7 +99,7 @@ resource "google_compute_instance" "game_server" {
     SERVER_RESTART_COUNT   = module.vars.server_restart_count
   }
 
-  metadata_startup_script = file("../startup-script.sh")
+  metadata_startup_script = file("../_modules/${module.vars.game_name}/startup-script.sh")
 
   service_account {
     email = format("%s%s", local.project_num, "-compute@developer.gserviceaccount.com")

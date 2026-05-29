@@ -1,4 +1,4 @@
-
+﻿
 variable "server_password" { type = string }
 
 variable "rcon_password" { type = string }
@@ -47,7 +47,7 @@ output "rcon_player_check" {
     value = "players"
 }
 
-# Extract count from PZ lines like "Players connected (1):". Must be a single command — startup-script uses
+# Extract count from PZ lines like "Players connected (1):". Must be a single command ΓÇö startup-script uses
 # `echo "$PLAYERS1" | $RCON_PLAYER_CHECK_GREP` with unquoted expansion, so `| head -1` breaks the pipeline.
 output "rcon_player_check_grep" {
     value = "grep -Eo '[0-9]+'"

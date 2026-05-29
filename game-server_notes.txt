@@ -1,55 +1,10 @@
 
-
 cd ./GitHub/igetit41-docker-game-server/terraform
 terraform init
 terraform plan
 
-current:
-https://steamcommunity.com/sharedfiles/filedetails/?id=2553809727
-https://steamcommunity.com/sharedfiles/filedetails/?id=2956146279
-https://steamcommunity.com/sharedfiles/filedetails/?id=3020323164
-https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012
-https://steamcommunity.com/sharedfiles/filedetails/?id=3000725405
-https://steamcommunity.com/sharedfiles/filedetails/?id=2920899878
-https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337
-https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885
-https://steamcommunity.com/sharedfiles/filedetails/?id=2871469707
-https://steamcommunity.com/sharedfiles/filedetails/?id=3360392628
-https://steamcommunity.com/sharedfiles/filedetails/?id=2944344655
-https://steamcommunity.com/sharedfiles/filedetails/?id=2710167561
-https://steamcommunity.com/sharedfiles/filedetails/?id=3056481712
-https://steamcommunity.com/sharedfiles/filedetails/?id=3370497379
-https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937
-https://steamcommunity.com/sharedfiles/filedetails/?id=2816646537
-https://steamcommunity.com/sharedfiles/filedetails/?id=3290232938
-https://steamcommunity.com/sharedfiles/filedetails/?id=2946364542
-https://steamcommunity.com/sharedfiles/filedetails/?id=3197857648
-https://steamcommunity.com/sharedfiles/filedetails/?id=3388028737
-https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298
-https://steamcommunity.com/sharedfiles/filedetails/?id=3388017161
-https://steamcommunity.com/sharedfiles/filedetails/?id=3446510982
-https://steamcommunity.com/sharedfiles/filedetails/?id=3444499190
-https://steamcommunity.com/sharedfiles/filedetails/?id=2950902979
-https://steamcommunity.com/sharedfiles/filedetails/?id=3342191739
-https://steamcommunity.com/sharedfiles/filedetails/?id=3406392630
-https://steamcommunity.com/sharedfiles/filedetails/?id=2650547917
-https://steamcommunity.com/sharedfiles/filedetails/?id=2847184718
-https://steamcommunity.com/sharedfiles/filedetails/?id=3465040406
-https://steamcommunity.com/sharedfiles/filedetails/?id=3404461962
-https://steamcommunity.com/sharedfiles/filedetails/?id=3330403100
-https://steamcommunity.com/sharedfiles/filedetails/?id=3392356751
-https://steamcommunity.com/sharedfiles/filedetails/?id=2618566294
-https://steamcommunity.com/sharedfiles/filedetails/?id=3485349033
-https://steamcommunity.com/sharedfiles/filedetails/?id=3417502641
-https://steamcommunity.com/sharedfiles/filedetails/?id=3418061837
-https://steamcommunity.com/sharedfiles/filedetails/?id=3394588830
-https://steamcommunity.com/sharedfiles/filedetails/?id=3402516345
-https://steamcommunity.com/sharedfiles/filedetails/?id=3490188370
-https://steamcommunity.com/sharedfiles/filedetails/?id=3470659758
-https://steamcommunity.com/sharedfiles/filedetails/?id=3502080466
-https://steamcommunity.com/sharedfiles/filedetails/?id=3508537032
-https://steamcommunity.com/sharedfiles/filedetails/?id=3171167894
-
+# Before first deploy: copy minecraft.env.example → minecraft.env and set CF_API_KEY
+# Modpack and server settings: edit _modules/minecraft/minecraft.env (see minecraft.env.example)
 
 
 sudo systemctl status docker --no-pager
@@ -65,50 +20,29 @@ getent passwd game-server
 ls -la /home/game-server/igetit41-docker-game-server 2>/dev/null || ls -la /home/game-server/
 
 
-sudo docker exec game-server sh -c 'ls -la /home/steam/Zomboid/Server 2>&1; find /home/steam/Zomboid -name "channel27.ini" 2>/dev/null'
+sudo docker exec game-server ls -la /data
 sudo docker logs game-server --tail 40
 sudo grep -i "startup-script" /var/log/syslog | tail -40
 
 sudo grep 'startup-script' /var/log/syslog | grep -E 'player-check|PLAYERS|COUNT|shutting-down' | tail -50
 
 
-        "sed -i '/CharacterFreePoints/s/.*/    CharacterFreePoints = 12,/' ./Zomboid/Server/channel27_SandboxVars.lua",
-        "sed -i '/StarterKit/s/.*/    StarterKit = true,\n    MaximumDismantlingXpLevel = 10,\n    XpMultiplier = 4,/' ./Zomboid/Server/channel27_SandboxVars.lua",
-        "sed -i '/MinutesPerPage/s/.*/    MinutesPerPage = 0.1,/' ./Zomboid/Server/channel27_SandboxVars.lua",
-        "sed -i '/WaterShutModifier/s/.*/    WaterShutModifier = 120,/' ./Zomboid/Server/channel27_SandboxVars.lua",
-        "sed -i '/ElecShutModifier/s/.*/    ElecShutModifier = 60,/' ./Zomboid/Server/channel27_SandboxVars.lua",
-        "sed -i '/^SleepAllowed/s/.*/SleepAllowed=true/' ./Zomboid/Server/channel27.ini",
+sudo docker exec game-server grep -E 'server-password|enable-rcon|rcon.password|rcon.port' /data/server.properties
 
-
-sudo docker exec game-server grep -nE 'CharacterFreePoints|StarterKit|MinutesPerPage|WaterShutModifier|ElecShutModifier|MaximumDismantlingXpLevel|SleepAllowed|XpMultiplier' /home/steam/Zomboid/Server/channel27_SandboxVars.lua
-
-sudo docker exec game-server ls /home/steam/Zomboid/Server
-
-sudo docker exec game-server sed -i \
-  -e '/CharacterFreePoints/s/.*/    CharacterFreePoints = 12,/' \
-  -e '/StarterKit/s/.*/    StarterKit = true,\n    MaximumDismantlingXpLevel = 10,\n    XpMultiplier = 4,/' \
-  -e '/MinutesPerPage/s/.*/    MinutesPerPage = 0.1,/' \
-  -e '/WaterShutModifier/s/.*/    WaterShutModifier = 120,/' \
-  -e '/ElecShutModifier/s/.*/    ElecShutModifier = 60,/' \
-  /home/steam/Zomboid/Server/channel27_SandboxVars.lua
-
-
-
-sudo docker exec game-server grep -nE 'SleepAllowed' /home/steam/Zomboid/Server/channel27.ini
-
-sudo docker exec game-server sed -i \
-  -e '/SleepAllowed/s/.*/SleepAllowed=true/' \
-  /home/steam/Zomboid/Server/channel27.ini
-
-sudo docker exec game-server cat /home/steam/Zomboid/Server/channel27_SandboxVars.lua
 
 sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
-  -a 127.0.0.1:27015 \
-  -p 'parK87liMe24' \
-  "setaccesslevel D3F1L3 user"
+  -a 127.0.0.1:25575 \
+  -p 'YOUR_RCON_PASSWORD' \
+  "list"
 
-sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:27015 -p 'parK87liMe24' "reloadlua channel27_SandboxVars.lua"
+sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
+  -a 127.0.0.1:25575 \
+  -p 'YOUR_RCON_PASSWORD' \
+  "say Hello from RCON"
 
 sudo docker restart game-server
 
 
+# First boot with a CurseForge modpack can take 10–20+ minutes while mods download.
+# Watch progress:
+sudo docker logs game-server -f

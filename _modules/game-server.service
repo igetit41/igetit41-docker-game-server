@@ -4,7 +4,7 @@ Description=game-server
 [Service]
 User=game-server
 WorkingDirectory=/home/game-server
-ExecStart=/bin/bash -c 'SCRIPT=/home/game-server/igetit41-docker-game-server/_modules/game-server.sh; [ -x "$SCRIPT" ] || SCRIPT=/home/game-server/_modules/game-server.sh; exec "$SCRIPT"'
+ExecStart=/bin/bash -c 'GN=$(curl -sf "http://metadata.google.internal/computeMetadata/v1/instance/attributes/GAME_NAME" -H "Metadata-Flavor: Google"); GN=${GN:-minecraft}; ROOT=/home/game-server/igetit41-docker-game-server; [ -f "$ROOT/_modules/$GN/game-server.sh" ] || ROOT=/home/game-server; exec /bin/bash "$ROOT/_modules/$GN/game-server.sh"'
 Restart=on-failure
 
 [Install]

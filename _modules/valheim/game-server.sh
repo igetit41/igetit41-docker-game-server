@@ -1,9 +1,11 @@
 #!/bin/bash
-# Legacy shared game-server script. systemd now runs _modules/<game>/game-server.sh from metadata.
+# Legacy shared script — Valheim still uses metadata-driven startup-script.sh in this module.
+# TODO: replace with a Valheim-specific game-server.sh in a future chat.
+
 echo "-----game-server-output-pull-origin"
 
 GAME_NAME=$(curl -sf "http://metadata.google.internal/computeMetadata/v1/instance/attributes/GAME_NAME" -H "Metadata-Flavor: Google")
-GAME_NAME=${GAME_NAME:-minecraft}
+GAME_NAME=${GAME_NAME:-valheim}
 
 STANDARD_REPO=/home/game-server/igetit41-docker-game-server
 FLAT_REPO=/home/game-server
@@ -21,22 +23,9 @@ git -C "$REPO_ROOT" reset --hard
 git -C "$REPO_ROOT" pull origin main
 
 chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
+chmod +x "$REPO_ROOT/_modules/$GAME_NAME"/*.sh 2>/dev/null || true
 chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
 sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
-
-if [ "$GAME_NAME" = "minecraft" ]; then
-  echo "-----game-server-output-minecraft-data-perms"
-  MC_DIR="$REPO_ROOT/_modules/minecraft"
-  if [ ! -f "$MC_DIR/minecraft.env" ]; then
-    echo "ERROR: $MC_DIR/minecraft.env missing. Copy minecraft.env.example and set CF_API_KEY."
-    exit 1
-  fi
-  mkdir -p "$MC_DIR/data"
-  docker run --rm \
-    -v "$MC_DIR/data:/mdata" \
-    alpine:3.19 \
-    sh -c 'chown -R 1000:1000 /mdata'
-fi
 
 echo "-----game-server-output-docker-compose"
 docker compose --file "$COMPOSE_FILE" up -d

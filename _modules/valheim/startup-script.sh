@@ -1,6 +1,5 @@
 #!/bin/bash
-# Legacy shared startup script. Minecraft and Zomboid use _modules/<game>/startup-script.sh.
-# Valheim and 7DTD copies in their modules still delegate to metadata until migrated.
+# Legacy metadata-driven startup script for Valheim. TODO: replace with Valheim-specific script.
 echo "-----startup-script-output-begin"
 
 # Troubleshooting

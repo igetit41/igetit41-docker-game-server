@@ -1,6 +1,9 @@
 # Local Terraform variables (often contain secrets)
 terraform/terraform.tfvars
 
+# CurseForge API key and local Minecraft overrides
+_modules/minecraft/minecraft.env
+
 # Terraform plugin cache (keep .terraform.lock.hcl committed for reproducible installs)
 terraform/.terraform/
 
