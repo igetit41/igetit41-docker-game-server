@@ -1,0 +1,2 @@
+# Shell scripts must use LF so GCE startup-script shebang works on Linux.
+*.sh text eol=lf
