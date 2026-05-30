@@ -38,7 +38,8 @@ locals {
     for line in local.minecraft_env_lines : trimspace(line)
     if startswith(trimspace(line), "CF_API_KEY=")
   ])
-  cf_api_key_raw = trim(trim(trim(replace(local.cf_api_key_line, "CF_API_KEY=", ""), "'"), "\"")
+  cf_api_key_stripped = trimspace(replace(local.cf_api_key_line, "CF_API_KEY=", ""))
+  cf_api_key_raw      = replace(replace(local.cf_api_key_stripped, "'", ""), "\"", "")
   minecraft_env_body = join("\n", [
     for line in local.minecraft_env_lines : line
     if !startswith(trimspace(line), "CF_API_KEY=")
