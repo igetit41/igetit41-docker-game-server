@@ -1,23 +1,23 @@
-version: '3.8'
-
-services:
-  game-server:
-    # Minecraft Java Edition (CurseForge modpack via itzg/minecraft-server)
-    # Game-specific settings (modpack, memory, rules) live in minecraft.env — not here.
-    image: itzg/minecraft-server
-    container_name: game-server
-    restart: always
-    tty: true
-    stdin_open: true
-    ports:
-      - "25565:25565"
-    env_file:
-      - ./minecraft.env
-    environment:
-      EULA: "TRUE"
-      TYPE: "CURSEFORGE"
-      ENABLE_RCON: "TRUE"
-      OVERRIDE_SERVER_PROPERTIES: "TRUE"
-      USE_AIKAR_FLAGS: "TRUE"
-    volumes:
-      - ./data:/data
+version: '3.8'
+
+services:
+  game-server:
+    # Minecraft Java Edition (CurseForge modpack via itzg/minecraft-server)
+    # Game-specific settings (modpack, memory, rules) live in minecraft.env — not here.
+    image: itzg/minecraft-server
+    container_name: game-server
+    restart: always
+    tty: true
+    stdin_open: true
+    ports:
+      - "25565:25565"
+    env_file:
+      - ./minecraft.env
+    environment:
+      EULA: "TRUE"
+      TYPE: "AUTO_CURSEFORGE"
+      ENABLE_RCON: "TRUE"
+      OVERRIDE_SERVER_PROPERTIES: "TRUE"
+      USE_AIKAR_FLAGS: "TRUE"
+    volumes:
+      - ./data:/data

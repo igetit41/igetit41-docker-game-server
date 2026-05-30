@@ -264,7 +264,7 @@ Per-game specifications. Update these as modules are implemented or changed.
 
 **Image:** `itzg/minecraft-server`  
 **Container name:** `game-server` (required)  
-**Default modpack:** [All the Mods 9](https://www.curseforge.com/minecraft/modpacks/all-the-mods-9) via `TYPE=CURSEFORGE` + `CF_PAGE_URL`
+**Default modpack:** [All the Mods 9](https://www.curseforge.com/minecraft/modpacks/all-the-mods-9) via `TYPE=AUTO_CURSEFORGE` + `CF_PAGE_URL`
 
 ### Ports and firewall (planned `module/vars.tf`)
 

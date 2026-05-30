@@ -18,7 +18,7 @@ Per-game images and env vars live in each `compose.yaml`. Edit the `# Changes Se
 
 ### Minecraft (CurseForge)
 
-The default stack uses [itzg/minecraft-server](https://github.com/itzg/docker-minecraft-server) with `TYPE=CURSEFORGE`.
+The default stack uses [itzg/minecraft-server](https://github.com/itzg/docker-minecraft-server) with `TYPE=AUTO_CURSEFORGE`.
 
 **Secrets stay in gitignored local files** — nothing sensitive is committed to the repo.
 
