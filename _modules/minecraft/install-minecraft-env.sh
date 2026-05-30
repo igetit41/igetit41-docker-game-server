@@ -40,9 +40,12 @@ fi
 
 printf '%s' "$cf_key" > "$SECRET"
 
-chmod 600 "$DEST" "$SECRET"
+chmod 600 "$DEST"
+# itzg/minecraft-server runs as uid 1000 — secret is bind-mounted into the container
+chmod 400 "$SECRET"
+chown 1000:1000 "$SECRET"
 if id game-server &>/dev/null; then
-  chown game-server:game-server "$DEST" "$SECRET" 2>/dev/null || true
+  chown game-server:game-server "$DEST" 2>/dev/null || true
 fi
 
 echo "-----minecraft-env-installed"
