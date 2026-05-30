@@ -27,6 +27,9 @@ sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-serve
 echo "-----game-server-output-install-minecraft-env"
 bash "$MODULE_DIR/install-minecraft-env.sh" "$MODULE_DIR/minecraft.env"
 
+echo "-----game-server-output-curseforge-preflight"
+bash "$MODULE_DIR/curseforge-preflight.sh" "$MODULE_DIR/cf-api-key.secret" || exit 1
+
 echo "-----game-server-output-minecraft-data-perms"
 mkdir -p "$MODULE_DIR/data"
 docker run --rm \

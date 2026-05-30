@@ -6,7 +6,7 @@ services:
     # Game-specific settings (modpack, memory, rules) live in minecraft.env — not here.
     image: itzg/minecraft-server
     container_name: game-server
-    restart: always
+    restart: on-failure:3
     tty: true
     stdin_open: true
     ports:
