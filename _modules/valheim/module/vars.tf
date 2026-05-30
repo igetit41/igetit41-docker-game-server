@@ -8,6 +8,14 @@ locals {
     rcon_pw_file = "sdtdserver.xml"
 }
 
+output "game_env_file" {
+  value = ""
+}
+
+output "game_api_key_var" {
+  value = ""
+}
+
 output "game_name" {
     value = "valheim"
 }

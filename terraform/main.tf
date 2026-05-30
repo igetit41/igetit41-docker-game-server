@@ -47,7 +47,7 @@ resource "google_compute_address" "game_server_ip" {
 }
 
 resource "google_compute_instance" "game_server" {
-  depends_on = [terraform_data.minecraft_env_required]
+  depends_on = [terraform_data.game_env_required]
 
   name         = "game-server"
   machine_type = local.machine_type
@@ -100,8 +100,9 @@ resource "google_compute_instance" "game_server" {
       RCON_RELOAD            = module.vars.rcon_reload
       EXEC_COMMANDS          = module.vars.exec_commands
       SERVER_RESTART_COUNT   = module.vars.server_restart_count
-    },
-    local.minecraft_metadata
+      GAME_ENV_B64           = local.game_env_b64
+      GAME_API_KEY_B64       = local.game_api_key_b64
+    }
   )
 
   metadata_startup_script = file("../_modules/${module.vars.game_name}/startup-script.sh")

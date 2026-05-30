@@ -7,6 +7,14 @@ output "game_name" {
     value = "zomboid"
 }
 
+output "game_env_file" {
+  value = ""
+}
+
+output "game_api_key_var" {
+  value = ""
+}
+
 output "firewall_tcp" {
     value = ["16262-16272", "27015"]
 }

@@ -33,7 +33,7 @@ The default stack uses [itzg/minecraft-server](https://github.com/itzg/docker-mi
 2. Copy `terraform.tfvars.example` → `terraform.tfvars` and set GCP + password values
 3. `terraform apply` from `terraform/`
 
-Terraform reads your local `minecraft.env` at apply time. Modpack settings go in `MINECRAFT_ENV_B64`; the CurseForge API key is extracted and delivered separately as `CF_API_KEY_B64` (decoded on the VM to `cf-api-key.secret`). No manual SCP or SSH steps.
+Terraform reads the active module's env file at apply time into `GAME_ENV_B64` and optional `GAME_API_KEY_B64` metadata. `game-server.sh` writes those to disk (also sourced from `startup-script.sh` on first boot). No manual SCP or SSH steps.
 
 World data persists in `_modules/minecraft/data/` on the VM.
 

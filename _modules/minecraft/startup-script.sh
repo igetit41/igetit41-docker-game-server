@@ -28,18 +28,6 @@ SERVER_PASSWORD=$(curl -sf "http://metadata.google.internal/computeMetadata/v1/i
 RCON_PW_VAR_LINE="rcon.password=${RCON_PW}"
 EXEC_COMMANDS="sed -i 's|^server-password=.*|server-password=${SERVER_PASSWORD}|g' ./server.properties"
 
-install_minecraft_env_from_metadata() {
-  local dest="$1"
-  local script_dir
-  script_dir="$(dirname "$dest")"
-  if [ -x "$script_dir/install-minecraft-env.sh" ]; then
-    bash "$script_dir/install-minecraft-env.sh" "$dest"
-  else
-    echo "-----startup-script-output-ERROR: install-minecraft-env.sh missing in $script_dir"
-    exit 1
-  fi
-}
-
 STANDARD_REPO=/home/game-server/igetit41-docker-game-server
 FLAT_REPO=/home/game-server
 if [ -f "$STANDARD_REPO/_modules/minecraft/compose.yaml" ]; then
@@ -93,7 +81,9 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
 
     MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
-    install_minecraft_env_from_metadata "$MODULE_DIR/minecraft.env"
+    # shellcheck source=/dev/null
+    source "$MODULE_DIR/game-server.sh"
+    install_env_from_metadata "$MODULE_DIR/minecraft.env" "$MODULE_DIR/cf-api-key.secret"
 
     echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
@@ -116,7 +106,9 @@ if [ -f "$COMPOSE_FILE" ] && [ ! -f /etc/systemd/system/game-server.service ]; t
     sudo chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
     sudo git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
     sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
-    install_minecraft_env_from_metadata "$MODULE_DIR/minecraft.env"
+    # shellcheck source=/dev/null
+    source "$MODULE_DIR/game-server.sh"
+    install_env_from_metadata "$MODULE_DIR/minecraft.env" "$MODULE_DIR/cf-api-key.secret"
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
     sudo systemctl restart game-server

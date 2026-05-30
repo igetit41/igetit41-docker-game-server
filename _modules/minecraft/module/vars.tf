@@ -7,6 +7,14 @@ output "game_name" {
   value = "minecraft"
 }
 
+output "game_env_file" {
+  value = "minecraft.env"
+}
+
+output "game_api_key_var" {
+  value = "CF_API_KEY"
+}
+
 output "firewall_tcp" {
   value = ["25565"]
 }
