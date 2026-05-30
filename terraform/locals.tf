@@ -1,5 +1,4 @@
 
-
 variable "PROJECT_ID" { type = string }
 variable "PROJECT_NUM" { type = string }
 variable "REGION" { type = string }
@@ -31,7 +30,22 @@ locals {
   machine_type       = var.MACHINE_TYPE
   minecraft_env_path = "${path.module}/../_modules/minecraft/minecraft.env"
 
+  # Parse CF_API_KEY at apply time; deliver as base64 metadata so the VM never
+  # parses $ characters through bash or Docker env_file.
+  minecraft_env_raw   = replace(file(local.minecraft_env_path), "\r\n", "\n")
+  minecraft_env_lines = split("\n", local.minecraft_env_raw)
+  cf_api_key_line = one([
+    for line in local.minecraft_env_lines : trimspace(line)
+    if startswith(trimspace(line), "CF_API_KEY=")
+  ])
+  cf_api_key_raw = trim(trim(trim(replace(local.cf_api_key_line, "CF_API_KEY=", ""), "'"), "\"")
+  minecraft_env_body = join("\n", [
+    for line in local.minecraft_env_lines : line
+    if !startswith(trimspace(line), "CF_API_KEY=")
+  ])
+
   minecraft_metadata = module.vars.game_name == "minecraft" ? {
-    MINECRAFT_ENV_B64 = filebase64(local.minecraft_env_path)
+    MINECRAFT_ENV_B64 = base64encode(local.minecraft_env_body)
+    CF_API_KEY_B64    = base64encode(local.cf_api_key_raw)
   } : {}
 }
