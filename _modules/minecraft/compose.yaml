@@ -19,5 +19,8 @@ services:
       ENABLE_RCON: "TRUE"
       OVERRIDE_SERVER_PROPERTIES: "TRUE"
       USE_AIKAR_FLAGS: "TRUE"
+      # Raw key file — avoids Docker Compose $ interpolation in env_file (see itzg auto-curseforge docs)
+      CF_API_KEY_FILE: /run/secrets/cf-api-key
     volumes:
       - ./data:/data
+      - ./cf-api-key.secret:/run/secrets/cf-api-key:ro
