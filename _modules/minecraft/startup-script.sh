@@ -30,20 +30,14 @@ EXEC_COMMANDS="sed -i 's|^server-password=.*|server-password=${SERVER_PASSWORD}|
 
 install_minecraft_env_from_metadata() {
   local dest="$1"
-  local b64
-  echo "-----startup-script-output-install-minecraft-env"
-  b64=$(curl -sf \
-    "http://metadata.google.internal/computeMetadata/v1/instance/attributes/MINECRAFT_ENV_B64" \
-    -H "Metadata-Flavor: Google" || true)
-  if [ -z "$b64" ]; then
-    echo "-----startup-script-output-ERROR: MINECRAFT_ENV_B64 metadata missing"
+  local script_dir
+  script_dir="$(dirname "$dest")"
+  if [ -x "$script_dir/install-minecraft-env.sh" ]; then
+    bash "$script_dir/install-minecraft-env.sh" "$dest"
+  else
+    echo "-----startup-script-output-ERROR: install-minecraft-env.sh missing in $script_dir"
     exit 1
   fi
-  mkdir -p "$(dirname "$dest")"
-  echo "$b64" | base64 -d > "$dest"
-  chmod 600 "$dest"
-  chown game-server:game-server "$dest" 2>/dev/null || true
-  echo "-----startup-script-output-minecraft-env-installed"
 }
 
 STANDARD_REPO=/home/game-server/igetit41-docker-game-server

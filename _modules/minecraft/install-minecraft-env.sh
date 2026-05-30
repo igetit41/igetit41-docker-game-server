@@ -18,6 +18,19 @@ fi
 
 mkdir -p "$(dirname "$DEST")"
 echo "$B64" | base64 -d > "$DEST"
+sed -i 's/\r$//' "$DEST"
+
+# Docker env_file does not strip shell quotes — CF_API_KEY='$2a$...' is passed literally.
+# Normalize to an unquoted value so the container receives the raw CurseForge key.
+if grep -q '^CF_API_KEY=' "$DEST"; then
+  cf_line=$(grep -m1 '^CF_API_KEY=' "$DEST")
+  cf_key="${cf_line#CF_API_KEY=}"
+  cf_key="${cf_key#\'}"; cf_key="${cf_key#\"}"
+  cf_key="${cf_key%\'}"; cf_key="${cf_key%\"}"
+  sed -i '/^CF_API_KEY=/d' "$DEST"
+  printf 'CF_API_KEY=%s\n' "$cf_key" >> "$DEST"
+fi
+
 chmod 600 "$DEST"
 if id game-server &>/dev/null; then
   chown game-server:game-server "$DEST" 2>/dev/null || true
