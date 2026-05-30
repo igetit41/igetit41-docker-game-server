@@ -24,11 +24,10 @@ chmod +x "$MODULE_DIR"/*.sh 2>/dev/null || true
 chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
 sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
 
+echo "-----game-server-output-install-minecraft-env"
+bash "$MODULE_DIR/install-minecraft-env.sh" "$MODULE_DIR/minecraft.env"
+
 echo "-----game-server-output-minecraft-data-perms"
-if [ ! -f "$MODULE_DIR/minecraft.env" ]; then
-  echo "ERROR: $MODULE_DIR/minecraft.env missing. Copy minecraft.env.example and set CF_API_KEY."
-  exit 1
-fi
 mkdir -p "$MODULE_DIR/data"
 docker run --rm \
   -v "$MODULE_DIR/data:/mdata" \

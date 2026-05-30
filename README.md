@@ -18,11 +18,22 @@ Per-game images and env vars live in each `compose.yaml`. Edit the `# Changes Se
 
 ### Minecraft (CurseForge)
 
-The default stack uses [itzg/minecraft-server](https://github.com/itzg/docker-minecraft-server) with `TYPE=CURSEFORGE`. Before first deploy:
+The default stack uses [itzg/minecraft-server](https://github.com/itzg/docker-minecraft-server) with `TYPE=CURSEFORGE`.
 
-1. Copy `_modules/minecraft/minecraft.env.example` to `_modules/minecraft/minecraft.env`
-2. Set `CF_API_KEY` from [CurseForge API keys](https://console.curseforge.com/)
-3. Optionally change modpack settings (`CF_PAGE_URL`, `CF_SLUG`, `CF_FILE_ID`, `MEMORY`, etc.) in `minecraft.env`
+**Secrets stay in gitignored local files** — nothing sensitive is committed to the repo.
+
+| Secret | Local file (gitignored) |
+|--------|-------------------------|
+| Join + RCON passwords | `terraform/terraform.tfvars` |
+| CurseForge API key + modpack settings | `_modules/minecraft/minecraft.env` |
+
+**Deploy (single command after local setup):**
+
+1. Copy `minecraft.env.example` → `minecraft.env` and set `CF_API_KEY`, modpack URL, memory, etc.
+2. Copy `terraform.tfvars.example` → `terraform.tfvars` and set GCP + password values
+3. `terraform apply` from `terraform/`
+
+Terraform reads your local `minecraft.env` at apply time and embeds it in instance metadata. The startup script writes it to disk before the container starts — no manual SCP or SSH steps.
 
 World data persists in `_modules/minecraft/data/` on the VM.
 

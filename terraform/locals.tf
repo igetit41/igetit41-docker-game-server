@@ -25,8 +25,13 @@ module "vars" {
 }
 
 locals {
-  project_id   = var.PROJECT_ID
-  project_num  = var.PROJECT_NUM
-  region       = var.REGION
-  machine_type = var.MACHINE_TYPE
+  project_id         = var.PROJECT_ID
+  project_num        = var.PROJECT_NUM
+  region             = var.REGION
+  machine_type       = var.MACHINE_TYPE
+  minecraft_env_path = "${path.module}/../_modules/minecraft/minecraft.env"
+
+  minecraft_metadata = module.vars.game_name == "minecraft" ? {
+    MINECRAFT_ENV_B64 = filebase64(local.minecraft_env_path)
+  } : {}
 }

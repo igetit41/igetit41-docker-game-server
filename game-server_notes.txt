@@ -3,8 +3,10 @@ cd ./GitHub/igetit41-docker-game-server/terraform
 terraform init
 terraform plan
 
-# Before first deploy: copy minecraft.env.example → minecraft.env and set CF_API_KEY
-# Modpack and server settings: edit _modules/minecraft/minecraft.env (see minecraft.env.example)
+# Local gitignored files required before terraform apply:
+#   terraform/terraform.tfvars     — GCP project, SERVER_PASSWORD, RCON_PASSWORD
+#   _modules/minecraft/minecraft.env — CF_API_KEY, modpack URL, MEMORY, etc.
+# Then: cd terraform && terraform apply  (no manual VM steps)
 
 
 sudo systemctl status docker --no-pager
@@ -46,3 +48,7 @@ sudo docker restart game-server
 # First boot with a CurseForge modpack can take 10–20+ minutes while mods download.
 # Watch progress:
 sudo docker logs game-server -f
+
+sudo grep -i "startup-script" /var/log/syslog | tail -50
+sudo grep "startup-script-output" /var/log/syslog | tail -80
+

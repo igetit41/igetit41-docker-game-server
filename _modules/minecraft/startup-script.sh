@@ -28,6 +28,24 @@ SERVER_PASSWORD=$(curl -sf "http://metadata.google.internal/computeMetadata/v1/i
 RCON_PW_VAR_LINE="rcon.password=${RCON_PW}"
 EXEC_COMMANDS="sed -i 's|^server-password=.*|server-password=${SERVER_PASSWORD}|g' ./server.properties"
 
+install_minecraft_env_from_metadata() {
+  local dest="$1"
+  local b64
+  echo "-----startup-script-output-install-minecraft-env"
+  b64=$(curl -sf \
+    "http://metadata.google.internal/computeMetadata/v1/instance/attributes/MINECRAFT_ENV_B64" \
+    -H "Metadata-Flavor: Google" || true)
+  if [ -z "$b64" ]; then
+    echo "-----startup-script-output-ERROR: MINECRAFT_ENV_B64 metadata missing"
+    exit 1
+  fi
+  mkdir -p "$(dirname "$dest")"
+  echo "$b64" | base64 -d > "$dest"
+  chmod 600 "$dest"
+  chown game-server:game-server "$dest" 2>/dev/null || true
+  echo "-----startup-script-output-minecraft-env-installed"
+}
+
 STANDARD_REPO=/home/game-server/igetit41-docker-game-server
 FLAT_REPO=/home/game-server
 if [ -f "$STANDARD_REPO/_modules/minecraft/compose.yaml" ]; then
@@ -80,6 +98,9 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     sudo chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
     sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
 
+    MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
+    install_minecraft_env_from_metadata "$MODULE_DIR/minecraft.env"
+
     echo "-----startup-script-output-start-server"
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
@@ -101,6 +122,7 @@ if [ -f "$COMPOSE_FILE" ] && [ ! -f /etc/systemd/system/game-server.service ]; t
     sudo chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
     sudo git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
     sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
+    install_minecraft_env_from_metadata "$MODULE_DIR/minecraft.env"
     sudo systemctl daemon-reload
     sudo systemctl enable game-server
     sudo systemctl restart game-server
