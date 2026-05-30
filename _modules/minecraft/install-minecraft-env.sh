@@ -26,10 +26,8 @@ sed -i 's/\r$//' "$DEST"
 
 cf_key=""
 if grep -q '^CF_API_KEY=' "$DEST"; then
-  cf_line=$(grep -m1 '^CF_API_KEY=' "$DEST")
-  cf_key="${cf_line#CF_API_KEY=}"
-  cf_key="${cf_key#\'}"; cf_key="${cf_key#\"}"
-  cf_key="${cf_key%\'}"; cf_key="${cf_key%\"}"
+  # cut/sed only — never assign the key through bash double-quotes ($P, $10, etc. expand)
+  cf_key=$(grep -m1 '^CF_API_KEY=' "$DEST" | cut -d= -f2- | sed -e "s/^['\"]//" -e "s/['\"]$//")
   sed -i '/^CF_API_KEY=/d' "$DEST"
 fi
 
