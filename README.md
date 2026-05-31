@@ -45,7 +45,7 @@ From `terraform/`:
 
 **Alternative:** set the same inputs with environment variables (`TF_VAR_PROJECT_ID`, `TF_VAR_PROJECT_NUM`, etc.).
 
-`SERVER_PASSWORD` and `RCON_PASSWORD` are marked `sensitive` in Terraform so they are redacted in normal plan/apply output. A `terraform.tfvars` file is still plaintext on disk; for stricter control use a secret manager and inject via CI or `TF_VAR_*`.
+`SERVER_PASSWORD` and `RCON_PASSWORD` are marked `sensitive` in Terraform so they are redacted in normal plan/apply output. Both are passed into the active game module; not every game uses both (e.g. Minecraft Java has no join password). Switch games by changing only the `module "vars"` `source` in `terraform/locals.tf`. A `terraform.tfvars` file is still plaintext on disk; for stricter control use a secret manager and inject via CI or `TF_VAR_*`.
 
 State file path is configured in `terraform/providers.tf` (`backend "local"`).
 

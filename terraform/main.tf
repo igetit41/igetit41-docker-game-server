@@ -83,7 +83,6 @@ resource "google_compute_instance" "game_server" {
     {
       enable-osconfig        = "TRUE"
       GAME_NAME              = module.vars.game_name
-      SERVER_PASSWORD        = var.SERVER_PASSWORD
       RCON_COMPATIBLE        = module.vars.rcon_compatible
       RCON_PW                = module.vars.rcon_pw
       RCON_OTHER_ARGS        = module.vars.rcon_other_args

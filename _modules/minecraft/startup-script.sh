@@ -24,9 +24,8 @@ RCON_RELOAD=""
 SERVER_RESTART_COUNT=0
 
 RCON_PW=$(curl -sf "http://metadata.google.internal/computeMetadata/v1/instance/attributes/RCON_PW" -H "Metadata-Flavor: Google")
-SERVER_PASSWORD=$(curl -sf "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SERVER_PASSWORD" -H "Metadata-Flavor: Google")
 RCON_PW_VAR_LINE="rcon.password=${RCON_PW}"
-EXEC_COMMANDS="sed -i 's|^server-password=.*|server-password=${SERVER_PASSWORD}|g' ./server.properties"
+EXEC_COMMANDS=""
 
 STANDARD_REPO=/home/game-server/igetit41-docker-game-server
 FLAT_REPO=/home/game-server

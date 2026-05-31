@@ -1,5 +1,9 @@
 
-variable "server_password" { type = string }
+variable "server_password" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
 
 variable "rcon_password" { type = string }
 
@@ -76,7 +80,7 @@ output "rcon_reload" {
 }
 
 output "exec_commands" {
-  value = "sed -i 's|^server-password=.*|server-password=${var.server_password}|g' ./server.properties"
+  value = ""
 }
 
 output "server_restart_count" {
