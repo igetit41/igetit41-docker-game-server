@@ -1,4 +1,5 @@
-locals {  game_server_zone = format("%s%s", local.region, "-a")
+locals {
+  game_server_zone = format("%s%s", local.region, "-a")
   wake_source_hash = sha256(join("", [
     filesha256("${path.module}/../wake-service/main.py"),
     filesha256("${path.module}/../wake-service/requirements.txt"),
