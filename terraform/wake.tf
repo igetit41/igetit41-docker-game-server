@@ -1,12 +1,4 @@
-# Cloud Run wake page: enter wake string → start game-server VM when TERMINATED.
-# URL is the stable Cloud Run URI (no custom domain or extra static IP).
-#
-# Image build uses Cloud Build during apply (requires gcloud CLI + credentials).
-# google provider ~> 5.10 does not support build_config / invoker_iam_disabled on
-# google_cloud_run_v2_service; public access uses roles/run.invoker for allUsers.
-
-locals {
-  game_server_zone = format("%s%s", local.region, "-a")
+locals {  game_server_zone = format("%s%s", local.region, "-a")
   wake_source_hash = sha256(join("", [
     filesha256("${path.module}/../wake-service/main.py"),
     filesha256("${path.module}/../wake-service/requirements.txt"),
