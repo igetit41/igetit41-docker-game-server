@@ -14,6 +14,15 @@ variable "RCON_PASSWORD" {
   sensitive = true
 }
 
+variable "WAKE_STRING" {
+  type      = string
+  sensitive = true
+  validation {
+    condition     = can(regex("^[A-Za-z0-9]+$", var.WAKE_STRING)) && length(var.WAKE_STRING) >= 8
+    error_message = "WAKE_STRING must be alphanumeric and at least 8 characters."
+  }
+}
+
 module "vars" {
   source = "../_modules/minecraft/module"
   #source = "../_modules/zomboid/module"
