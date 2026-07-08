@@ -48,7 +48,30 @@ sudo docker restart game-server
 # First boot with a CurseForge modpack can take 10–20+ minutes while mods download.
 # Watch progress:
 sudo grep -i "startup-script" /var/log/syslog | tail -50
-sudo grep "startup-script-output" /var/log/syslog | tail -50
+sudo grep -i "game-server" /var/log/syslog | tail -50
 sudo docker logs game-server -f | tail -50
 
+KEY='...'
+curl -s -o /dev/null -w "HTTP %{http_code}\n" \
+  -H "x-api-key: $KEY" \
+  -H "Accept: application/json" \
+  "https://api.curseforge.com/v1/games/432"
 
+
+sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
+  -a 127.0.0.1:25575 \
+  -p 'parK87liMe24' \
+  "difficulty easy"
+
+  "op D3F1L3"
+
+  "list"
+  
+  "give D3F1L3 immersive_aircraft:gyrodyne 10"
+
+sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
+  -a 127.0.0.1:25575 \
+  -p 'dfa2e2a663e0e1246f8cf20b' \
+  "list"
+
+sudo docker exec game-server sed -i 's/^rcon.password=.*/rcon.password=parK87liMe24/' /data/server.properties

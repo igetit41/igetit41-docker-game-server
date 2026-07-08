@@ -4,7 +4,6 @@ locals {
     filesha256("${path.module}/../wake-service/main.py"),
     filesha256("${path.module}/../wake-service/requirements.txt"),
     filesha256("${path.module}/../wake-service/Dockerfile"),
-    filesha256("${path.module}/../wake-service/cloudbuild.yaml"),
   ]))
   wake_image = "${local.region}-docker.pkg.dev/${local.project_id}/wake-service/wake:${local.wake_source_hash}"
 }
@@ -110,8 +109,7 @@ resource "terraform_data" "wake_image_build" {
     command = join(" ", [
       "gcloud builds submit",
       abspath("${path.module}/../wake-service"),
-      "--config=cloudbuild.yaml",
-      "--substitutions=_IMAGE=${local.wake_image}",
+      "--tag=${local.wake_image}",
       "--project=${local.project_id}",
       "--region=${local.region}",
       "--quiet",
@@ -160,8 +158,9 @@ resource "google_cloud_run_v2_service" "wake" {
       resources {
         limits = {
           cpu    = "1"
-          memory = "256Mi"
+          memory = "512Mi"
         }
+        cpu_idle = true
       }
     }
 
