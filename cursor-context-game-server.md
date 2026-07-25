@@ -496,7 +496,7 @@ Semicolon-separated `sed` commands applied after server is up:
 |---------|-------|
 | Script | `_modules/smalland/usage-check.sh` |
 | Method | Parse `docker logs --since` for `NotifyAcceptingConnection accepted from` (join) and `UNetConnection::Close` + `RemoteAddr` (leave); persist set in `/var/tmp/smalland-online-players` |
-| Ready wait | Full `docker logs` grep for `RegisterServer` / `Bringing World ... up for play` — never `--tail N` (UE logs hundreds of lines/sec, markers scroll past) |
+| Ready wait | Full `docker logs` for `IpNetDriver listening on port` (observed on live boot). Never `--tail N` — streaming buries early markers. Each loop logs container status + matched line. |
 | Policy | `_modules/idle-loop.sh` |
 
 **Calibrate after first live join/leave** — adjust greps if Smalland’s log lines differ from stock UE patterns.

@@ -112,13 +112,13 @@ echo "-----startup-script-output-waiting-for-smalland"
 LOOP_VAR=0
 while true; do
   LOOP_VAR=$((LOOP_VAR + 1))
-  echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR"
-  if echo "$(sudo docker ps)" | grep -qE 'game-server'; then
-    READY=$(sudo docker logs game-server 2>&1 | grep -E 'RegisterServer|Bringing World .* up for play' | tail -n1 || true)
-    if [ -n "$READY" ]; then
-      echo "-----startup-script-output-GAMESERVER_RUNNING-$READY"
-      break
-    fi
+  CONTAINER_UP=$(sudo docker ps --filter name=^game-server$ --format '{{.Status}}' 2>/dev/null || true)
+  # Observed on a live boot: "LogNet: ... IpNetDriver listening on port 7777"
+  READY=$(sudo docker logs game-server 2>&1 | grep 'IpNetDriver listening on port' | tail -n1 || true)
+  echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR container=${CONTAINER_UP:-missing} ready_line=${READY:-none}"
+  if [ -n "$CONTAINER_UP" ] && [ -n "$READY" ]; then
+    echo "-----startup-script-output-GAMESERVER_RUNNING-$READY"
+    break
   fi
   sleep "$CHECK_INTERVAL"
 done
