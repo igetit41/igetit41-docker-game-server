@@ -114,7 +114,7 @@ while true; do
   LOOP_VAR=$((LOOP_VAR + 1))
   echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR"
   if echo "$(sudo docker ps)" | grep -qE 'game-server'; then
-    READY=$(sudo docker logs game-server --tail 80 2>/dev/null | grep -E 'LogInit:.*Engine|LogLoad: Took|Starting SMALLAND|LogNet:.*Listen' || true)
+    READY=$(sudo docker logs game-server 2>&1 | grep -E 'RegisterServer|Bringing World .* up for play' | tail -n1 || true)
     if [ -n "$READY" ]; then
       echo "-----startup-script-output-GAMESERVER_RUNNING-$READY"
       break

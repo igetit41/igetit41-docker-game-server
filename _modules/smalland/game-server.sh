@@ -76,6 +76,7 @@ chmod +x "$MODULE_DIR"/*.sh 2>/dev/null || true
 chmod +x "$MODULE_DIR/start-server.sh" 2>/dev/null || true
 chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
 sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
+sudo systemctl daemon-reload
 
 echo "-----game-server-output-install-env"
 install_env_from_metadata "$MODULE_DIR/smalland.env"
