@@ -1,0 +1,16 @@
+services:
+  game-server:
+    image: lucasromanomr/smalland-steam-server:latest
+    container_name: game-server
+    restart: unless-stopped
+    stop_grace_period: 2m
+    env_file:
+      - ./smalland.env
+    ports:
+      - "7777:7777/udp"
+      - "7777:7777/tcp"
+      - "7778:7778/udp"
+      - "7778:7778/tcp"
+    volumes:
+      - ./data:/home/steam/smalland-server/SMALLAND/Saved
+      - ./start-server.sh:/start-server.sh:ro

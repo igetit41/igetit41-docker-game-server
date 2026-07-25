@@ -1,8 +1,6 @@
 #!/bin/bash
 echo "-----startup-script-output-begin"
 
-# Minecraft Java Edition (CurseForge) — idle shutdown via RCON list on port 25575.
-
 CHECK_INTERVAL=60
 IDLE_COUNT=15
 COUNT=0
@@ -39,6 +37,7 @@ fi
 
 MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
 COMPOSE_FILE="$MODULE_DIR/compose.yaml"
+USAGE_CHECK="$MODULE_DIR/usage-check.sh"
 
 if [ ! -f "$COMPOSE_FILE" ]; then
     echo "-----startup-script-output-first-run"
@@ -80,6 +79,7 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
 
     MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
+    USAGE_CHECK="$MODULE_DIR/usage-check.sh"
     # shellcheck source=/dev/null
     source "$MODULE_DIR/game-server.sh"
     install_env_from_metadata "$MODULE_DIR/minecraft.env" "$MODULE_DIR/cf-api-key.secret"
@@ -97,6 +97,7 @@ elif [ -f "$FLAT_REPO/_modules/$GAME_NAME/compose.yaml" ]; then
 fi
 MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
 COMPOSE_FILE="$MODULE_DIR/compose.yaml"
+USAGE_CHECK="$MODULE_DIR/usage-check.sh"
 
 if [ -f "$COMPOSE_FILE" ] && [ ! -f /etc/systemd/system/game-server.service ]; then
     echo "-----startup-script-output-install-systemd-missed-first-run"
@@ -113,6 +114,8 @@ if [ -f "$COMPOSE_FILE" ] && [ ! -f /etc/systemd/system/game-server.service ]; t
     sudo systemctl restart game-server
 fi
 
+export RCON_PW RCON_PORT RCON_OTHER_ARGS RCON_PLAYER_CHECK RCON_PLAYER_CHECK_GREP
+
 RCON_CHECK=$(echo "$(sudo docker exec -i game-server ls 2>/dev/null)" | grep -E rcon)
 echo "-----startup-script-output-RCON_CHECK-$RCON_CHECK"
 
@@ -127,9 +130,7 @@ while [[ "$RCON_CHECK" == "" ]]; do
     echo "-----startup-script-output-SERVER_CHECK2-$SERVER_CHECK2"
 
     if [[ "$SERVER_CHECK1" == *game-server* ]] && [[ "$SERVER_CHECK2" == /data ]]; then
-        echo "-----startup-script-output-installing-rcon"
-        echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-        echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
+        "$USAGE_CHECK" >/dev/null || true
     else
         echo "-----startup-script-output-sleep4-$CHECK_INTERVAL"
         sleep $CHECK_INTERVAL
@@ -214,42 +215,6 @@ if [[ -n "$EXEC_COMMANDS" ]]; then
     echo "-----startup-script-output-exec-commands-end"
 fi
 
-while true; do
-    PLAYERS1=$(sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon -a 127.0.0.1:$RCON_PORT -p $RCON_PW $RCON_OTHER_ARGS "$RCON_PLAYER_CHECK")
-    PLAYERS2=$(echo "$PLAYERS1" | bash -c "$RCON_PLAYER_CHECK_GREP")
-    if [[ -z "$PLAYERS2" ]]; then
-        PLAYERS2=$(echo "$PLAYERS1" | grep -oE '[0-9]+' | head -n1)
-    fi
-    PLAYERS=$(echo "$PLAYERS2" | tr -cd '[:digit:]')
-    echo "-----startup-script-output-player-check rcon=\"$(echo "$PLAYERS1" | tr '\n\r' ' ')\" filtered=\"$PLAYERS2\""
-    STAMP=$(date +'%Y-%m-%d:%H.%M:%S')
-    echo "-----startup-script-output-$STAMP-PLAYERS: $PLAYERS"
-
-    if ! [[ $PLAYERS =~ ^[0-9]+$ ]]; then
-        PLAYERS=0
-    fi
-
-    if [[ $PLAYERS -gt "0" ]]; then
-        COUNT=0
-    else
-        COUNT=$(expr $COUNT + 1)
-    fi
-    echo "-----startup-script-output-$STAMP-COUNT: $COUNT"
-
-    if [ $COUNT -gt $IDLE_COUNT ]; then
-        echo "-----startup-script-output-$STAMP-shutting-down"
-        sudo docker compose --file "$COMPOSE_FILE" down
-        sudo poweroff
-        break
-    fi
-
-    RCON_CHECK=$(echo "$(sudo docker exec -i game-server ls 2>/dev/null)" | grep -E rcon)
-    if [[ "$RCON_CHECK" == "" ]]; then
-        echo "-----startup-script-output-installing-rcon"
-        echo $(sudo docker exec -i game-server curl -c x -L --insecure --output rcon-0.10.3-amd64_linux.tar.gz "https://github.com/gorcon/rcon-cli/releases/download/v0.10.3/rcon-0.10.3-amd64_linux.tar.gz")
-        echo $(sudo docker exec -i game-server tar -xvzf rcon-0.10.3-amd64_linux.tar.gz)
-    fi
-
-    echo "-----startup-script-output-sleep3-$CHECK_INTERVAL"
-    sleep $CHECK_INTERVAL
-done
+sudo chmod +x "$USAGE_CHECK" "$REPO_ROOT/_modules/idle-loop.sh" 2>/dev/null || true
+# shellcheck source=/dev/null
+source "$REPO_ROOT/_modules/idle-loop.sh"

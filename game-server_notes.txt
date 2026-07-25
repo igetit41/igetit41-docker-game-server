@@ -61,7 +61,9 @@ curl -s -o /dev/null -w "HTTP %{http_code}\n" \
 sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
   -a 127.0.0.1:25575 \
   -p 'parK87liMe24' \
-  "difficulty easy"
+  "give D3F1L3 immersive_aircraft:gyrodyne 1"
+
+  "difficulty"
 
   "op D3F1L3"
 

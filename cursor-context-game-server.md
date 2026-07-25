@@ -2,7 +2,9 @@
 
 Workload repo: `./GitHub/igetit41-docker-game-server`
 
-Terraform on **Google Cloud** provisions a single **Compute Engine** VM (static IP, firewall rules, game-specific metadata). On first boot the VM installs Docker, clones this repo, and runs **Docker Compose** from `_modules/<game>/`. A **systemd** unit pulls `main` and restarts the stack. An idle-detection loop in the GCE startup script shuts the VM down when no players are connected for long enough.
+Terraform on **Google Cloud** provisions a single **Compute Engine** VM (static IP, firewall rules, game-specific metadata). On first boot the VM installs Docker, clones this repo, and runs **Docker Compose** from `_modules/<game>/`. A **systemd** unit pulls `main` and restarts the stack. Idle detection uses a **shared idle loop** plus a **per-game `usage-check.sh`** that prints an online-player count; when that stays `0` long enough the VM `poweroff`s.
+
+A **Cloud Run wake** service (`terraform/wake.tf`, `wake-service/`) presents a public form; submitting the wake string calls `instances.start` on the game VM.
 
 This document is the cross-chat context for this workload. The main body is **game-agnostic**. Per-game details live in **appendices** at the end and should be updated as each module matures.
 
@@ -20,22 +22,24 @@ Run stand-alone game servers on a cost-conscious GCP VM that:
 
 ---
 
-## Current state vs target (May 2026)
+## Current state vs target (Jul 2026)
 
-**Active effort:** Replace Zomboid as the default deployment with **Minecraft Java Edition (CurseForge modpack)**, while **preserving** the full Zomboid module for future redeploy.
+**Active effort:** Add **Smalland** module and switch the default Terraform game from Minecraft to Smalland (destroy/recreate VM). **Preserve** Minecraft and Zomboid modules.
 
-| Area | Status (Phase 1) |
-|------|------------------|
-| Default game in `terraform/locals.tf` | `_modules/minecraft/module` (zomboid commented alternative) |
-| `_modules/minecraft/` | `vars.tf`, `minecraft.env.example`, `startup-script.sh`, `game-server.sh` complete |
-| `_modules/zomboid/` | Restored from git HEAD; per-module `startup-script.sh` + `game-server.sh` |
-| Root `startup-script.sh` | Legacy; Valheim/7d2d module copies still use it |
-| `_modules/game-server.service` | Resolves `_modules/<game>/game-server.sh` from metadata |
-| `terraform/main.tf` | Embeds `_modules/<game>/startup-script.sh`; adds `SERVER_PASSWORD` metadata |
+| Area | Status |
+|------|--------|
+| Default game in `terraform/locals.tf` | Still `_modules/minecraft/module` until Phase 4 switch |
+| `_modules/smalland/` | Phase 1–3: compose, env example, start-server override, vars, scripts, log-based `usage-check.sh` |
+| `_modules/idle-loop.sh` | Shared idle policy (interval / counter / poweroff) |
+| `_modules/minecraft/usage-check.sh` | RCON `list` → integer count |
+| Wake (Cloud Run) | `terraform/wake.tf` + `wake-service/` deployed; `WAKE_STRING` in tfvars |
+| `_modules/zomboid/` | Preserved; not yet on `usage-check.sh` contract |
 
-**Design decision (confirmed in chat):** Startup and game-server scripts should be **unique per game module**, not one shared script with conditionals. Each module owns ports, player-count method, config file paths, and prep steps.
+**Design decision (confirmed in chat):** Startup and game-server scripts should be **unique per game module**, not one shared script with conditionals. Each module owns ports, prep steps, and **`usage-check.sh`**.
 
-**Design decision (confirmed in chat):** Do **not** delete Zomboid. Restore it as a first-class module so redeploy is a `locals.tf` source swap. Running two games **simultaneously** requires a separate Terraform instance declaration (not implemented today).
+**Design decision (confirmed in chat):** Idle **policy** is shared (`_modules/idle-loop.sh`); **detection** is per-module (`usage-check.sh` must print a single integer). RCON stays inside RCON games (Minecraft/Zomboid), not in Smalland or root Terraform switches.
+
+**Design decision (confirmed in chat):** Do **not** delete Minecraft or Zomboid when switching games. Redeploy is a `locals.tf` source swap + VM replace. Running two games **simultaneously** is not implemented.
 
 ---
 
@@ -44,36 +48,41 @@ Run stand-alone game servers on a cost-conscious GCP VM that:
 ```mermaid
 flowchart TD
   TF[Terraform terraform/] -->|module.vars| VM[GCE VM game-server]
-  VM -->|metadata_startup_script| SS["_modules/<game>/startup-script.sh"]
+  Wake[Cloud Run wake-service] -->|instances.start| VM
+  VM -->|metadata_startup_script| SS["_modules/game/startup-script.sh"]
   SS -->|first boot| Docker[Install Docker + clone repo]
   SS -->|enable| SystemD[game-server.service]
-  SystemD --> GS["_modules/<game>/game-server.sh"]
-  GS --> DC["docker compose -f _modules/<game>/compose.yaml"]
-  SS -->|idle loop| Shutdown[compose down + poweroff]
+  SystemD --> GS["_modules/game/game-server.sh"]
+  GS --> DC["docker compose"]
+  SS --> Idle["_modules/idle-loop.sh"]
+  Idle --> UC["_modules/game/usage-check.sh"]
+  Idle -->|count 0 for IDLE_COUNT| Shutdown[compose down + poweroff]
 ```
 
-**One VM, one game:** `terraform/locals.tf` selects exactly one `module "vars"` source. That module's `game_name` output drives metadata, firewall ports, and (target) which startup script Terraform embeds.
+**One VM, one game:** `terraform/locals.tf` selects exactly one `module "vars"` source. That module's `game_name` output drives metadata, firewall ports, and which startup script Terraform embeds.
 
-**Module plug-in contract (target layout):**
+**Module plug-in contract:**
 
 ```
 _modules/<game>/
   compose.yaml           # Docker stack; container MUST be named game-server
   game-server.sh         # git pull + game-specific prep + docker compose up
-  startup-script.sh      # first boot + idle shutdown + game-specific RCON/config
+  startup-script.sh      # first boot + wait-until-ready + source idle-loop.sh
+  usage-check.sh         # MUST print a single integer: online players (0+)
   module/vars.tf         # Terraform: game_name, firewall_tcp/udp, optional secrets
-  *.env.example          # optional; gitignored *.env for local secrets (e.g. CF_API_KEY)
+  *.env.example          # optional; gitignored *.env for local secrets
   data/                  # runtime on VM; not committed
 ```
 
-Shared infra (game-agnostic):
+**Shared (game-agnostic):**
 
 | Path | Role |
 |------|------|
-| `terraform/` | GCP VM, firewall, static IP, Ops Agent, instance metadata |
-| `_modules/game-server.service` | systemd unit; should resolve `_modules/$GAME_NAME/game-server.sh` from metadata |
-| `README.md` | Operator-facing overview |
-| `game-server_notes.txt` | Ad-hoc VM diagnostics cheat sheet (currently Minecraft-oriented) |
+| `terraform/` | GCP VM, firewall, static IP, Ops Agent, wake Cloud Run, metadata |
+| `_modules/idle-loop.sh` | Idle policy only: call `USAGE_CHECK`, counter, compose down + poweroff |
+| `_modules/game-server.service` | systemd; resolves `_modules/$GAME_NAME/game-server.sh` from metadata |
+| `wake-service/` | Flask wake form + `instances.start` |
+| `README.md` / `game-server_notes.txt` | Operator notes |
 
 ---
 
@@ -81,25 +90,28 @@ Shared infra (game-agnostic):
 
 ```
 igetit41-docker-game-server/
-├── cursor-context-game-server.md   # this file
+├── cursor-context-game-server.md
 ├── README.md
 ├── game-server_notes.txt
-├── startup-script.sh               # legacy shared script (to be removed after per-module split)
+├── startup-script.sh               # legacy shared script
+├── wake-service/                   # Cloud Run wake app
 ├── terraform/
 │   ├── locals.tf                   # game module selector + root variables
-│   ├── main.tf                     # VM, firewall, metadata
-│   ├── providers.tf                # local backend: ../../tfstates/game-server.tfstate
-│   ├── outputs.tf                  # game_server_ip, IAP SSH command
-│   ├── ops_agent.tf                # Google Ops Agent via OS Config
+│   ├── main.tf                     # VM, firewall, metadata (incl. SERVER_PASSWORD)
+│   ├── wake.tf                     # Cloud Run wake + SA + secret
+│   ├── providers.tf
+│   ├── outputs.tf                  # game_server_ip, wake_url, IAP SSH
+│   ├── ops_agent.tf
 │   └── terraform.tfvars.example
 └── _modules/
-    ├── game-server.sh              # legacy shared script
+    ├── idle-loop.sh                # shared idle policy
     ├── game-server.service
-    ├── minecraft/                  # default target module (in progress)
-    ├── zomboid/                      # preserved; restore from git HEAD
-    ├── valheim/                      # existing; not part of current migration
-    ├── 7d2d/                         # existing; not part of current migration
-    └── enshrouded/                   # compose only; no Terraform module
+    ├── smalland/                   # Phase 1–3 module (next default)
+    ├── minecraft/                  # preserved; usage-check via RCON
+    ├── zomboid/
+    ├── valheim/
+    ├── 7d2d/
+    └── enshrouded/
 ```
 
 ---
@@ -130,17 +142,17 @@ From `terraform/`:
 - `game-server` — ICMP + TCP/UDP ports from `module.vars.firewall_tcp` / `firewall_udp`, source `0.0.0.0/0`
 - `allow-iap-ssh` — TCP 22 from `35.235.240.0/20`
 
-**Root Terraform variables:** `PROJECT_ID`, `PROJECT_NUM`, `REGION`, `MACHINE_TYPE`, `SERVER_PASSWORD`, `RCON_PASSWORD` (sensitive).
+**Root Terraform variables:** `PROJECT_ID`, `PROJECT_NUM`, `REGION`, `MACHINE_TYPE`, `SERVER_PASSWORD`, `RCON_PASSWORD`, `WAKE_STRING` (sensitive).
 
-**Ops Agent:** `terraform/ops_agent.tf` enables `osconfig.googleapis.com` and installs Ops Agent on labeled instances. Allow several minutes after apply, then use Logs Explorer (`resource.type="gce_instance"`).
+**Ops Agent:** `terraform/ops_agent.tf` enables `osconfig.googleapis.com` and installs Ops Agent on labeled instances.
 
-**Target Terraform wiring change:**
+**Wake:** `terraform/wake.tf` builds/pushes `wake-service` via Cloud Build during apply, deploys Cloud Run `game-server-wake`, public `roles/run.invoker`. Output: `wake_url`.
 
 ```hcl
 metadata_startup_script = file("../_modules/${module.vars.game_name}/startup-script.sh")
 ```
 
-Metadata should shrink to infra-facing keys (`GAME_NAME`, optional password metadata). RCON player-check strings move into per-game startup scripts.
+Instance metadata still passes RCON_* keys for modules that expose them; Smalland sets `rcon_compatible=false` and empty RCON strings. `SERVER_PASSWORD` is on metadata for games that upsert join passwords (Smalland → `PASSWORD=` in env).
 
 ---
 
@@ -152,9 +164,9 @@ Metadata should shrink to infra-facing keys (`GAME_NAME`, optional password meta
 2. Resolve repo root (`/home/game-server/igetit41-docker-game-server` or flat clone under `/home/game-server`)
 3. Create `game-server` user, install Docker, clone repo
 4. Install `_modules/game-server.service`, enable and start `game-server`
-5. Wait for container `game-server`, install [gorcon/rcon-cli](https://github.com/gorcon/rcon-cli) inside container when applicable
-6. Apply game-specific config (password injection, sandbox edits, etc.)
-7. Enter idle loop
+5. Wait for container `game-server` and game-specific readiness (RCON live for Minecraft; log markers for Smalland)
+6. Apply game-specific config (password injection, etc.)
+7. `source _modules/idle-loop.sh` with `USAGE_CHECK=_modules/<game>/usage-check.sh`
 
 ### Steady state (`game-server.service` → `game-server.sh`)
 
@@ -166,12 +178,14 @@ Metadata should shrink to infra-facing keys (`GAME_NAME`, optional password meta
 
 | Parameter | Default | Location |
 |-----------|---------|----------|
-| `CHECK_INTERVAL` | 60 seconds | startup script |
-| `IDLE_COUNT` | 15 intervals (~15 min idle) | startup script |
+| `CHECK_INTERVAL` | 60 seconds | per-game startup script |
+| `IDLE_COUNT` | 15 intervals (~15 min idle) | per-game startup script |
+| Policy | shared | `_modules/idle-loop.sh` |
+| Detection | per game | `_modules/<game>/usage-check.sh` → integer |
 
 When player count stays 0 for `IDLE_COUNT` consecutive checks: `docker compose down` then `poweroff`.
 
-**Player detection methods by game:** RCON (Minecraft, Zomboid, 7DTD), HTTP status JSON (Valheim). See appendices.
+**Detection by game:** RCON `list` (Minecraft), RCON `players` (Zomboid — not yet on usage-check contract), UE log RemoteAddr join/leave (Smalland). See appendices.
 
 ---
 
@@ -179,11 +193,10 @@ When player count stays 0 for `IDLE_COUNT` consecutive checks: `docker compose d
 
 | Secret | Typical storage | Consumed by |
 |--------|-------------------|-------------|
-| `SERVER_PASSWORD`, `RCON_PASSWORD` | `terraform.tfvars` / `TF_VAR_*` | Terraform → metadata and/or startup script sed into game config |
-| Game-specific API keys (e.g. CurseForge) | Gitignored `*.env` on VM | Docker Compose `env_file` |
-| Hardcoded passwords in compose | **Avoid** — use placeholders + injection |
+| `SERVER_PASSWORD`, `RCON_PASSWORD`, `WAKE_STRING` | `terraform.tfvars` / `TF_VAR_*` | Terraform → metadata / Secret Manager / module |
+| Game-specific env (CF key, Smalland settings) | Gitignored `*.env` | Compose `env_file` via `GAME_ENV_B64` |
 
-Gitignored paths (`.gitignore`): `terraform/terraform.tfvars`, `_modules/minecraft/minecraft.env`.
+Gitignored: `terraform/terraform.tfvars`, `_modules/minecraft/minecraft.env`, `_modules/smalland/smalland.env`.
 
 ---
 
@@ -302,21 +315,22 @@ Planned injection via startup script `sed` (from Terraform `SERVER_PASSWORD` / `
 - `server-password=...`
 - `rcon.password=...`
 
-### Idle detection (planned per-module startup script)
+### Idle detection
 
 | Setting | Value |
 |---------|-------|
+| Script | `_modules/minecraft/usage-check.sh` |
 | RCON port | `25575` |
 | RCON command | `list` |
-| Player count grep | Parse `There are N of a max of M` — avoid matching max-players |
-| Live test | `list` (prefer over `help` on modded servers) |
+| Player count | Parse `There are N` |
+| Live test (startup wait) | `list` before entering idle-loop |
 | Container ready check | `pwd` == `/data` |
 
-Uses gorcon `rcon-0.10.3-amd64_linux` installed inside container (same pattern as legacy shared script).
+Installs gorcon `rcon-0.10.3-amd64_linux` inside container from `usage-check.sh` when missing. Idle policy: `_modules/idle-loop.sh`.
 
-### `game-server.sh` prep (planned)
+### `game-server.sh` prep
 
-- Require `minecraft.env` exists or exit with clear error
+- Require `minecraft.env` via `GAME_ENV_B64`
 - `mkdir -p data`
 - `chown -R 1000:1000 data` via ephemeral `alpine:3.19` container
 
@@ -333,7 +347,7 @@ sudo docker exec -i game-server ./rcon-0.10.3-amd64_linux/rcon \
 
 ### Historical note
 
-Git HEAD had an older Minecraft compose: local Forge zip (`GENERIC_PACK`), 48G RAM, container name `minecraftserver-atm9`, no RCON/idle integration. Superseded by CurseForge approach in working tree.
+Git HEAD had an older Minecraft compose: local Forge zip (`GENERIC_PACK`), 48G RAM, container name `minecraftserver-atm9`, no RCON/idle integration. Superseded by CurseForge approach.
 
 ---
 
@@ -439,8 +453,63 @@ Semicolon-separated `sed` commands applied after server is up:
 
 ---
 
+## Appendix F: Smalland — Survive the Wilds
+
+**Status:** Module Phases 1–3 complete; Terraform default switch (Phase 4) and VM rebuild (Phase 5) pending.  
+**Module path:** `_modules/smalland/`  
+**Image:** `lucasromanomr/smalland-steam-server:latest` (Steam App ID `808040`)  
+**Container name:** `game-server`  
+**RCON:** none (game has no RCON/admin console)
+
+### Image facts (registry inspect)
+
+| Field | Value |
+|-------|--------|
+| WorkingDir | `/home/steam/smalland-server` |
+| Entrypoint / Cmd | `/entrypoint.sh` → `bash start-server.sh` |
+| Exposed ports | `7777` and `7778` TCP+UDP |
+| Volume | `/home/steam/smalland-server/SMALLAND/Saved` |
+| User | `steam` |
+
+**Critical:** Hub image hardcodes `SERVERNAME`/`PASSWORD` in baked `/start-server.sh`. Entrypoint always `cp /start-server.sh` into the working dir. Compose **must** mount `_modules/smalland/start-server.sh` at `/start-server.sh`. Our script reads Docker `env_file` variables.
+
+### Ports and firewall (`module/vars.tf`)
+
+| Protocol | Ports |
+|----------|-------|
+| TCP | `7777`, `7778` |
+| UDP | `7777`, `7778` |
+
+### Compose / env
+
+- `env_file`: `smalland.env` (from `smalland.env.example`; gitignored)
+- Saves: `./data` → `.../SMALLAND/Saved`
+- `SERVER_PASSWORD` metadata upserts `PASSWORD=` in `smalland.env` on `game-server.sh` / first boot
+- Cross Play must be enabled in the game client for dedicated servers to appear in the browser
+
+### Idle detection
+
+| Setting | Value |
+|---------|-------|
+| Script | `_modules/smalland/usage-check.sh` |
+| Method | Parse `docker logs --since` for `NotifyAcceptingConnection accepted from` (join) and `UNetConnection::Close` + `RemoteAddr` (leave); persist set in `/var/tmp/smalland-online-players` |
+| Ready wait | Log markers: `LogInit` / `LogLoad` / `Starting SMALLAND` / `LogNet` Listen |
+| Policy | `_modules/idle-loop.sh` |
+
+**Calibrate after first live join/leave** — adjust greps if Smalland’s log lines differ from stock UE patterns.
+
+### Redeploy (after Phase 4)
+
+1. Copy `smalland.env.example` → `smalland.env`
+2. `source = "../_modules/smalland/module"` in `terraform/locals.tf`
+3. Replace/destroy `google_compute_instance.game_server` (keep static IP + wake)
+4. `terraform apply`; join with Cross Play; tune usage-check from logs
+
+---
+
 ## Appendix changelog
 
 | Date | Change |
 |------|--------|
+| 2026-07-25 | Usage-check contract + `idle-loop.sh`. Minecraft RCON moved to `usage-check.sh`. Smalland module Phases 1–3 + Appendix F. Wake Cloud Run documented. |
 | 2026-05-29 | Phase 1: Minecraft module files + per-game scripts. Zomboid restored with per-game scripts. Terraform uses `_modules/<game>/startup-script.sh`. Valheim/7d2d retain legacy metadata-driven scripts as placeholders. |

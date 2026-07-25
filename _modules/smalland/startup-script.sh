@@ -1,0 +1,129 @@
+#!/bin/bash
+echo "-----startup-script-output-begin"
+
+CHECK_INTERVAL=60
+IDLE_COUNT=15
+COUNT=0
+FIRST_RUN=false
+
+GAME_NAME=smalland
+
+STANDARD_REPO=/home/game-server/igetit41-docker-game-server
+FLAT_REPO=/home/game-server
+if [ -f "$STANDARD_REPO/_modules/smalland/compose.yaml" ]; then
+  REPO_ROOT=$STANDARD_REPO
+elif [ -f "$FLAT_REPO/_modules/smalland/compose.yaml" ]; then
+  REPO_ROOT=$FLAT_REPO
+else
+  REPO_ROOT=$STANDARD_REPO
+fi
+
+MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
+COMPOSE_FILE="$MODULE_DIR/compose.yaml"
+USAGE_CHECK="$MODULE_DIR/usage-check.sh"
+
+if [ ! -f "$COMPOSE_FILE" ]; then
+    echo "-----startup-script-output-first-run"
+    FIRST_RUN=true
+
+    sudo apt update -y
+    sudo apt install -y net-tools jq
+
+    echo "-----startup-script-output-add-user"
+    useradd -m --shell /sbin/nologin game-server
+    passwd -d game-server
+    usermod -a -G sudo game-server
+    cd /home/game-server
+
+    echo "-----startup-script-output-install-docker"
+    sudo apt-get install -y ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update -y
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    sudo service docker start
+    sudo usermod -a -G docker game-server
+    newgrp docker
+
+    echo "-----startup-script-output-clone-repo"
+    sudo -H -u game-server bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
+    sudo git config --global --add safe.directory "$REPO_ROOT"
+
+    sudo chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
+    sudo chmod +x "$MODULE_DIR"/*.sh 2>/dev/null || true
+    sudo chmod +x "$MODULE_DIR/start-server.sh" 2>/dev/null || true
+    sudo chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
+    sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
+
+    MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
+    USAGE_CHECK="$MODULE_DIR/usage-check.sh"
+    # shellcheck source=/dev/null
+    source "$MODULE_DIR/game-server.sh"
+    install_env_from_metadata "$MODULE_DIR/smalland.env"
+
+    SERVER_PASSWORD=$(curl -sf \
+      "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SERVER_PASSWORD" \
+      -H "Metadata-Flavor: Google" || true)
+    if [ -n "$SERVER_PASSWORD" ]; then
+      if grep -qE '^PASSWORD=' "$MODULE_DIR/smalland.env"; then
+        sed -i "s|^PASSWORD=.*|PASSWORD=${SERVER_PASSWORD}|" "$MODULE_DIR/smalland.env"
+      else
+        printf 'PASSWORD=%s\n' "$SERVER_PASSWORD" >> "$MODULE_DIR/smalland.env"
+      fi
+    fi
+
+    echo "-----startup-script-output-start-server"
+    sudo systemctl daemon-reload
+    sudo systemctl enable game-server
+    sudo systemctl restart game-server
+fi
+
+if [ -f "$STANDARD_REPO/_modules/$GAME_NAME/compose.yaml" ]; then
+  REPO_ROOT=$STANDARD_REPO
+elif [ -f "$FLAT_REPO/_modules/$GAME_NAME/compose.yaml" ]; then
+  REPO_ROOT=$FLAT_REPO
+fi
+MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
+COMPOSE_FILE="$MODULE_DIR/compose.yaml"
+USAGE_CHECK="$MODULE_DIR/usage-check.sh"
+
+if [ -f "$COMPOSE_FILE" ] && [ ! -f /etc/systemd/system/game-server.service ]; then
+    echo "-----startup-script-output-install-systemd-missed-first-run"
+    sudo chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
+    sudo chmod +x "$MODULE_DIR"/*.sh 2>/dev/null || true
+    sudo chmod +x "$MODULE_DIR/start-server.sh" 2>/dev/null || true
+    sudo chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
+    sudo git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
+    sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
+    # shellcheck source=/dev/null
+    source "$MODULE_DIR/game-server.sh"
+    install_env_from_metadata "$MODULE_DIR/smalland.env"
+    sudo systemctl daemon-reload
+    sudo systemctl enable game-server
+    sudo systemctl restart game-server
+fi
+
+echo "-----startup-script-output-waiting-for-smalland"
+LOOP_VAR=0
+while true; do
+  LOOP_VAR=$((LOOP_VAR + 1))
+  echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR"
+  if echo "$(sudo docker ps)" | grep -qE 'game-server'; then
+    READY=$(sudo docker logs game-server --tail 80 2>/dev/null | grep -E 'LogInit:.*Engine|LogLoad: Took|Starting SMALLAND|LogNet:.*Listen' || true)
+    if [ -n "$READY" ]; then
+      echo "-----startup-script-output-GAMESERVER_RUNNING-$READY"
+      break
+    fi
+  fi
+  sleep "$CHECK_INTERVAL"
+done
+
+export SMALLAND_LOG_WINDOW_SECS=$((CHECK_INTERVAL + 30))
+sudo chmod +x "$USAGE_CHECK" "$REPO_ROOT/_modules/idle-loop.sh" 2>/dev/null || true
+# shellcheck source=/dev/null
+source "$REPO_ROOT/_modules/idle-loop.sh"
