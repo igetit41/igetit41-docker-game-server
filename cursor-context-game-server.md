@@ -484,8 +484,11 @@ Semicolon-separated `sed` commands applied after server is up:
 
 - `env_file`: `smalland.env` (from `smalland.env.example`; gitignored)
 - Saves: `./data` → `.../SMALLAND/Saved`
+- `game-server.sh` pulls the image, chowns `data/` to the image `steam` UID/GID (not hardcoded 1000), then after `compose up` runs `chown -R steam:steam` on `SMALLAND/Saved` inside the container so Config/saves are writable on first boot
+- Do not patch a live broken VM for ownership — push the fix and `terraform apply -replace=google_compute_instance.game_server`
 - `SERVER_PASSWORD` metadata upserts `PASSWORD=` in `smalland.env` on `game-server.sh` / first boot
 - Cross Play must be enabled in the game client for dedicated servers to appear in the browser
+- `game-server.service` exiting success/`inactive` after `compose up` is normal (oneshot-style); container keeps running under Docker
 
 ### Idle detection
 
@@ -498,12 +501,26 @@ Semicolon-separated `sed` commands applied after server is up:
 
 **Calibrate after first live join/leave** — adjust greps if Smalland’s log lines differ from stock UE patterns.
 
-### Redeploy (after Phase 4)
+### Redeploy (Phase 4 done; locals point at Smalland)
 
-1. Copy `smalland.env.example` → `smalland.env`
-2. `source = "../_modules/smalland/module"` in `terraform/locals.tf`
-3. Replace/destroy `google_compute_instance.game_server` (keep static IP + wake)
-4. `terraform apply`; join with Cross Play; tune usage-check from logs
+1. Ensure `smalland.env` exists locally (gitignored); push module files to `main`
+2. Align `terraform.tfvars` `SERVER_PASSWORD` with `smalland.env` `PASSWORD` (VM upserts `PASSWORD=` from metadata and overwrites the env line)
+3. Replace instance only — keep static IP + wake: `terraform apply -replace=google_compute_instance.game_server` (do not destroy wake resources / wake secret if players already have `wake_url` + `WAKE_STRING`)
+4. Join with Cross Play enabled. If `PRIVATE=1`, the server is hidden from the public browser — use direct connect / favorites
+5. Calibrate idle greps from one join/leave: `docker logs game-server | grep -E 'NotifyAcceptingConnection|Join succeeded|UNetConnection::Close'`
+
+### Local smoke test (optional, before GCP)
+
+From `_modules/smalland/` with Docker installed:
+
+```bash
+docker compose pull
+docker compose up -d
+docker logs game-server -f
+docker compose down
+```
+
+Validates image pull, `/start-server.sh` override, env, and ports without waiting on GCE. Does not replace GCP first-boot / wake / metadata testing.
 
 ---
 
