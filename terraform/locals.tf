@@ -24,7 +24,8 @@ variable "WAKE_STRING" {
 }
 
 module "vars" {
-  source = "../_modules/minecraft/module"
+  source = "../_modules/smalland/module"
+  #source = "../_modules/minecraft/module"
   #source = "../_modules/zomboid/module"
   #source = "../_modules/7d2d/module"
   #source = "../_modules/valheim/module"
