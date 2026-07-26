@@ -49,7 +49,8 @@ Run stand-alone game servers on a cost-conscious GCP VM that:
 flowchart TD
   TF[Terraform terraform/] -->|module.vars| VM[GCE VM game-server]
   Wake[Cloud Run wake-service] -->|instances.start| VM
-  VM -->|metadata_startup_script| SS["_modules/game/startup-script.sh"]
+  VM -->|metadata_startup_script| Boot["_modules/bootstrap-startup.sh"]
+  Boot -->|git pull + exec| SS["_modules/game/startup-script.sh"]
   SS -->|first boot| Docker[Install Docker + clone repo]
   SS -->|enable| SystemD[game-server.service]
   SystemD --> GS["_modules/game/game-server.sh"]
@@ -149,7 +150,7 @@ From `terraform/`:
 **Wake:** `terraform/wake.tf` builds/pushes `wake-service` via Cloud Build during apply, deploys Cloud Run `game-server-wake`, public `roles/run.invoker`. Output: `wake_url`.
 
 ```hcl
-metadata_startup_script = file("../_modules/${module.vars.game_name}/startup-script.sh")
+metadata_startup_script = file("../_modules/bootstrap-startup.sh")
 ```
 
 Instance metadata still passes RCON_* keys for modules that expose them; Smalland sets `rcon_compatible=false` and empty RCON strings. `SERVER_PASSWORD` is on metadata for games that upsert join passwords (Smalland → `PASSWORD=` in env).
@@ -158,7 +159,9 @@ Instance metadata still passes RCON_* keys for modules that expose them; Smallan
 
 ## Runtime flow (game-agnostic)
 
-### First boot (`startup-script.sh`)
+### First boot / every boot (`bootstrap-startup.sh` → module `startup-script.sh`)
+
+GCE metadata runs the thin `_modules/bootstrap-startup.sh` (set once via terraform). It `git pull`s `main`, then `exec`s `_modules/$GAME_NAME/startup-script.sh` from the repo. Startup and idle-loop changes therefore land on the next reboot without another terraform apply (unless the thin bootstrap itself changes).
 
 1. Read `GAME_NAME` (and secrets) from instance metadata
 2. Resolve repo root (`/home/game-server/igetit41-docker-game-server` or flat clone under `/home/game-server`)

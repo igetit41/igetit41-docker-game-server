@@ -22,17 +22,20 @@ MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
 COMPOSE_FILE="$MODULE_DIR/compose.yaml"
 USAGE_CHECK="$MODULE_DIR/usage-check.sh"
 
-if [ ! -f "$COMPOSE_FILE" ]; then
+# First-run = Docker missing (bootstrap may already have cloned the repo).
+if ! command -v docker >/dev/null 2>&1; then
     echo "-----startup-script-output-first-run"
     FIRST_RUN=true
 
     sudo apt update -y
-    sudo apt install -y net-tools jq
+    sudo apt install -y net-tools jq git
 
     echo "-----startup-script-output-add-user"
-    useradd -m --shell /sbin/nologin game-server
-    passwd -d game-server
-    usermod -a -G sudo game-server
+    if ! id game-server >/dev/null 2>&1; then
+      useradd -m --shell /sbin/nologin game-server
+      passwd -d game-server
+      usermod -a -G sudo game-server
+    fi
     cd /home/game-server
 
     echo "-----startup-script-output-install-docker"
@@ -51,7 +54,9 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     newgrp docker
 
     echo "-----startup-script-output-clone-repo"
-    sudo -H -u game-server bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
+    if [ ! -d "$STANDARD_REPO/.git" ]; then
+      sudo -H -u game-server bash -c 'git clone https://github.com/igetit41/igetit41-docker-game-server'
+    fi
     sudo git config --global --add safe.directory "$REPO_ROOT"
 
     sudo chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true

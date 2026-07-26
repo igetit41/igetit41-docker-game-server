@@ -105,7 +105,7 @@ resource "google_compute_instance" "game_server" {
     }
   )
 
-  metadata_startup_script = file("../_modules/${module.vars.game_name}/startup-script.sh")
+  metadata_startup_script = file("../_modules/bootstrap-startup.sh")
 
   service_account {
     email = format("%s%s", local.project_num, "-compute@developer.gserviceaccount.com")
