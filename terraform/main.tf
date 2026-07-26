@@ -107,6 +107,13 @@ resource "google_compute_instance" "game_server" {
 
   metadata_startup_script = file("../_modules/bootstrap-startup.sh")
 
+  # Changing metadata_startup_script is ForceNew; ignore so applies never destroy the disk/world.
+  # New instances still get bootstrap from the line above. Update an existing VM in place with:
+  # gcloud compute instances add-metadata game-server --zone=REGION-a --metadata-from-file=startup-script=../_modules/bootstrap-startup.sh
+  lifecycle {
+    ignore_changes = [metadata_startup_script]
+  }
+
   service_account {
     email = format("%s%s", local.project_num, "-compute@developer.gserviceaccount.com")
     scopes = [

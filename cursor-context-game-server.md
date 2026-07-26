@@ -161,7 +161,9 @@ Instance metadata still passes RCON_* keys for modules that expose them; Smallan
 
 ### First boot / every boot (`bootstrap-startup.sh` → module `startup-script.sh`)
 
-GCE metadata runs the thin `_modules/bootstrap-startup.sh` (set once via terraform). It `git pull`s `main`, then `exec`s `_modules/$GAME_NAME/startup-script.sh` from the repo. Startup and idle-loop changes therefore land on the next reboot without another terraform apply (unless the thin bootstrap itself changes).
+GCE metadata runs the thin `_modules/bootstrap-startup.sh`. It `git pull`s `main`, then `exec`s `_modules/$GAME_NAME/startup-script.sh` from the repo. Startup/idle/`usage-check` changes land on the next reboot without terraform.
+
+Terraform sets bootstrap on **create**, then `lifecycle.ignore_changes = [metadata_startup_script]` so later applies never replace the VM over script drift. To install/update bootstrap on an **existing** disk (keep the world): `gcloud compute instances add-metadata … --metadata-from-file=startup-script=../_modules/bootstrap-startup.sh`, then start/wake.
 
 1. Read `GAME_NAME` (and secrets) from instance metadata
 2. Resolve repo root (`/home/game-server/igetit41-docker-game-server` or flat clone under `/home/game-server`)
