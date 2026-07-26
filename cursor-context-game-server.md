@@ -498,7 +498,7 @@ Semicolon-separated `sed` commands applied after server is up:
 | Setting | Value |
 |---------|-------|
 | Script | `_modules/smalland/usage-check.sh` |
-| Method | Log window → set of `IP:port` in `/var/tmp/smalland-online-players`. Join: `NotifyAcceptingConnection` (extract `IP:port` only — one connection = one player). Leave: Close/Closing/Cleaned-up lines’ `IP:port`. Do not also key on `Join succeeded` names (that double-counted). |
+| Method | Rebuild set each check from `docker logs --since` container `StartedAt` (no sticky state). Join: `NotifyAcceptingConnection` → `IP:port`. Leave: Close/Closing/Cleaned-up → drop `IP:port`. Do not also key on `Join succeeded` names (that double-counted). Legacy `/var/tmp/smalland-online-players` is deleted if present. |
 | Ready wait | Full `docker logs` for `IpNetDriver listening on port` (observed on live boot). Never `--tail N` — streaming buries early markers. Each loop logs container status + matched line. |
 | Policy | `_modules/idle-loop.sh` |
 
