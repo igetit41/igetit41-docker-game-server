@@ -9,13 +9,14 @@ terraform plan
 # Then: cd terraform && terraform apply  (no manual VM steps)
 
 
+
+sudo grep -i "startup-script\|google_metadata" /var/log/syslog | tail -30
+sudo ls -la /var/log/syslog
+sudo systemctl status game-server --no-pager
+sudo journalctl -u game-server -n 50 --no-pager
 sudo systemctl status docker --no-pager
 sudo docker ps
 sudo docker logs game-server --tail 80
-sudo systemctl status game-server --no-pager
-sudo journalctl -u game-server -n 50 --no-pager
-sudo grep -i "startup-script\|google_metadata" /var/log/syslog | tail -30
-sudo ls -la /var/log/syslog
 
 
 getent passwd game-server

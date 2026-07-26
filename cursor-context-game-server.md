@@ -29,7 +29,7 @@ Run stand-alone game servers on a cost-conscious GCP VM that:
 | Area | Status |
 |------|--------|
 | Default game in `terraform/locals.tf` | Still `_modules/minecraft/module` until Phase 4 switch |
-| `_modules/smalland/` | Phase 1–3: compose, env example, start-server override, vars, scripts, log-based `usage-check.sh` |
+| `_modules/smalland/` | Active: SteamCMD update-on-start image, env/`start-server.sh`, log-based `usage-check.sh` |
 | `_modules/idle-loop.sh` | Shared idle policy (interval / counter / poweroff) |
 | `_modules/minecraft/usage-check.sh` | RCON `list` → integer count |
 | Wake (Cloud Run) | `terraform/wake.tf` + `wake-service/` deployed; `WAKE_STRING` in tfvars |
@@ -106,7 +106,7 @@ igetit41-docker-game-server/
 └── _modules/
     ├── idle-loop.sh                # shared idle policy
     ├── game-server.service
-    ├── smalland/                   # Phase 1–3 module (next default)
+    ├── smalland/                   # active default (SteamCMD update-on-start)
     ├── minecraft/                  # preserved; usage-check via RCON
     ├── zomboid/
     ├── valheim/
@@ -455,40 +455,37 @@ Semicolon-separated `sed` commands applied after server is up:
 
 ## Appendix F: Smalland — Survive the Wilds
 
-**Status:** Module Phases 1–3 complete; Terraform default switch (Phase 4) and VM rebuild (Phase 5) pending.  
+**Status:** Active Terraform game. Uses SteamCMD update-on-start (not the frozen Hub image).  
 **Module path:** `_modules/smalland/`  
-**Image:** `lucasromanomr/smalland-steam-server:latest` (Steam App ID `808040`)  
+**Image:** built locally as `smalland-steamcmd:local` from `cm2network/steamcmd:root` + `_modules/smalland/Dockerfile`  
+**Steam App ID:** `808040` (anonymous `app_update` on every container start; **no** `validate`)  
 **Container name:** `game-server`  
 **RCON:** none (game has no RCON/admin console)
 
-### Image facts (registry inspect)
+### Why not Hub
+
+`lucasromanomr/smalland-steam-server:latest` was pinned at ProjectVersion `1.5.1` (compiled Nov 2024). Client builds (e.g. Steam build `22695059`) did not list it in the public browser even though `RegisterServer` succeeded. Fix: install/update DS from Steam on start so version tracks the client.
+
+### Image / volumes
 
 | Field | Value |
 |-------|--------|
-| WorkingDir | `/home/steam/smalland-server` |
-| Entrypoint / Cmd | `/entrypoint.sh` → `bash start-server.sh` |
-| Exposed ports | `7777` and `7778` TCP+UDP |
-| Volume | `/home/steam/smalland-server/SMALLAND/Saved` |
-| User | `steam` |
-
-**Critical:** Hub image hardcodes `SERVERNAME`/`PASSWORD` in baked `/start-server.sh`. Entrypoint always `cp /start-server.sh` into the working dir. Compose **must** mount `_modules/smalland/start-server.sh` at `/start-server.sh`. Our script reads Docker `env_file` variables.
-
-### Ports and firewall (`module/vars.tf`)
-
-| Protocol | Ports |
-|----------|-------|
-| TCP | `7777`, `7778` |
-| UDP | `7777`, `7778` |
+| Base | `cm2network/steamcmd:root` (steam UID/GID `1000`) |
+| Entrypoint | `/entrypoint.sh` → SteamCMD `app_update 808040` → `/start-server.sh` |
+| Game install volume | `./server-files` → `/home/steam/smalland-server` (persisted; gitignored) |
+| Saves volume | `./data` → `.../SMALLAND/Saved` (gitignored) |
+| Start script | `./start-server.sh` → `/start-server.sh:ro` (env-driven params) |
+| Ports | `7777`/`7778` TCP+UDP |
 
 ### Compose / env
 
 - `env_file`: `smalland.env` (from `smalland.env.example`; gitignored)
-- Saves: `./data` → `.../SMALLAND/Saved`
-- `game-server.sh` pulls the image, chowns `data/` to the image `steam` UID/GID (not hardcoded 1000), then after `compose up` runs `chown -R steam:steam` on `SMALLAND/Saved` inside the container so Config/saves are writable on first boot
-- Do not patch a live broken VM for ownership — push the fix and `terraform apply -replace=google_compute_instance.game_server`
-- `SERVER_PASSWORD` metadata upserts `PASSWORD=` in `smalland.env` on `game-server.sh` / first boot
-- Cross Play must be enabled in the game client for dedicated servers to appear in the browser
-- `game-server.service` exiting success/`inactive` after `compose up` is normal (oneshot-style); container keeps running under Docker
+- `game-server.sh` chowns `data/` + `server-files/` to `1000:1000`, `docker compose build`, then `up -d`
+- First boot (empty `server-files`): long Steam download before listen; later wakes: short no-op `app_update` when already current
+- Do not patch a live VM for this — push and `terraform apply -replace=google_compute_instance.game_server`
+- `SERVER_PASSWORD` metadata upserts `PASSWORD=` in `smalland.env`
+- Cross Play required for dedicated servers in the browser
+- `game-server.service` exiting success/`inactive` after `compose up` is normal; container keeps running under Docker
 
 ### Idle detection
 
@@ -514,13 +511,13 @@ Semicolon-separated `sed` commands applied after server is up:
 From `_modules/smalland/` with Docker installed:
 
 ```bash
-docker compose pull
+docker compose build
 docker compose up -d
 docker logs game-server -f
 docker compose down
 ```
 
-Validates image pull, `/start-server.sh` override, env, and ports without waiting on GCE. Does not replace GCP first-boot / wake / metadata testing.
+First `up` downloads app `808040` into `./server-files` (long). Later ups should be mostly a quick `app_update`. Does not replace GCP first-boot / wake / metadata testing.
 
 ---
 
@@ -528,5 +525,6 @@ Validates image pull, `/start-server.sh` override, env, and ports without waitin
 
 | Date | Change |
 |------|--------|
+| 2026-07-25 | Smalland: replace Hub image with SteamCMD update-on-start (`Dockerfile`/`entrypoint.sh`, persist `server-files/`). |
 | 2026-07-25 | Usage-check contract + `idle-loop.sh`. Minecraft RCON moved to `usage-check.sh`. Smalland module Phases 1–3 + Appendix F. Wake Cloud Run documented. |
 | 2026-05-29 | Phase 1: Minecraft module files + per-game scripts. Zomboid restored with per-game scripts. Terraform uses `_modules/<game>/startup-script.sh`. Valheim/7d2d retain legacy metadata-driven scripts as placeholders. |

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mounted at /start-server.sh; image entrypoint copies this into the server working dir.
+# Mounted at /start-server.sh; entrypoint runs this after SteamCMD update from STEAMAPPDIR.
 
 SERVERNAME="${SERVERNAME:-MySmallandServer}"
 WORLDNAME="${WORLDNAME:-World}"

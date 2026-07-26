@@ -5,8 +5,10 @@ terraform/terraform.tfvars
 _modules/minecraft/minecraft.env
 _modules/minecraft/cf-api-key.secret
 
-# Smalland local overrides
+# Smalland local overrides / persisted install
 _modules/smalland/smalland.env
+_modules/smalland/data/
+_modules/smalland/server-files/
 
 # Terraform plugin cache (keep .terraform.lock.hcl committed for reproducible installs)
 terraform/.terraform/

@@ -1,6 +1,7 @@
 services:
   game-server:
-    image: lucasromanomr/smalland-steam-server:latest
+    build: .
+    image: smalland-steamcmd:local
     container_name: game-server
     restart: unless-stopped
     stop_grace_period: 2m
@@ -12,5 +13,6 @@ services:
       - "7778:7778/udp"
       - "7778:7778/tcp"
     volumes:
+      - ./server-files:/home/steam/smalland-server
       - ./data:/home/steam/smalland-server/SMALLAND/Saved
       - ./start-server.sh:/start-server.sh:ro

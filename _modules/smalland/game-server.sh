@@ -90,17 +90,17 @@ if [ -n "$SERVER_PASSWORD" ]; then
 fi
 
 echo "-----game-server-output-smalland-data-perms"
-mkdir -p "$MODULE_DIR/data"
-docker pull lucasromanomr/smalland-steam-server:latest
-STEAM_UID=$(docker run --rm --entrypoint id lucasromanomr/smalland-steam-server:latest -u)
-STEAM_GID=$(docker run --rm --entrypoint id lucasromanomr/smalland-steam-server:latest -g)
-echo "-----game-server-output-steam-uid-$STEAM_UID-$STEAM_GID"
+mkdir -p "$MODULE_DIR/data" "$MODULE_DIR/server-files"
+# cm2network/steamcmd steam user is UID/GID 1000
 docker run --rm \
   -v "$MODULE_DIR/data:/sdata" \
+  -v "$MODULE_DIR/server-files:/sfiles" \
   alpine:3.19 \
-  sh -c "chown -R ${STEAM_UID}:${STEAM_GID} /sdata"
+  sh -c "chown -R 1000:1000 /sdata /sfiles"
+
+echo "-----game-server-output-docker-compose-build"
+docker compose --file "$COMPOSE_FILE" build
 
 echo "-----game-server-output-docker-compose"
 docker compose --file "$COMPOSE_FILE" up -d
-docker exec -u 0 game-server chown -R steam:steam /home/steam/smalland-server/SMALLAND/Saved
-echo "-----game-server-output-saved-perms-ok"
+echo "-----game-server-output-compose-up-ok"
