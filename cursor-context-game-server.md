@@ -493,7 +493,7 @@ Semicolon-separated `sed` commands applied after server is up:
 | Setting | Value |
 |---------|-------|
 | Script | `_modules/smalland/usage-check.sh` |
-| Method | Parse `docker logs --since` for `NotifyAcceptingConnection accepted from` (join) and `UNetConnection::Close` + `RemoteAddr` (leave); persist set in `/var/tmp/smalland-online-players` |
+| Method | Log window join/leave → set in `/var/tmp/smalland-online-players`. Joins: any `NotifyAcceptingConnection` line’s `IP:port`, plus `Join succeeded: Name`. Leaves: Close/Closing/Cleaned-up lines’ `IP:port`. Do not require exact `accepted from ` wording (Shipping uses `from:`). |
 | Ready wait | Full `docker logs` for `IpNetDriver listening on port` (observed on live boot). Never `--tail N` — streaming buries early markers. Each loop logs container status + matched line. |
 | Policy | `_modules/idle-loop.sh` |
 
