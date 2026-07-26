@@ -90,13 +90,12 @@ if [ -n "$SERVER_PASSWORD" ]; then
 fi
 
 echo "-----game-server-output-smalland-data-perms"
-mkdir -p "$MODULE_DIR/data" "$MODULE_DIR/server-files"
+mkdir -p "$MODULE_DIR/server-files"
 # cm2network/steamcmd steam user is UID/GID 1000
 docker run --rm \
-  -v "$MODULE_DIR/data:/sdata" \
   -v "$MODULE_DIR/server-files:/sfiles" \
   alpine:3.19 \
-  sh -c "chown -R 1000:1000 /sdata /sfiles"
+  sh -c "chown -R 1000:1000 /sfiles"
 
 echo "-----game-server-output-docker-compose-build"
 docker compose --file "$COMPOSE_FILE" build

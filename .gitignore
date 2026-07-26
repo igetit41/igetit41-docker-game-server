@@ -7,7 +7,6 @@ _modules/minecraft/cf-api-key.secret
 
 # Smalland local overrides / persisted install
 _modules/smalland/smalland.env
-_modules/smalland/data/
 _modules/smalland/server-files/
 
 # Terraform plugin cache (keep .terraform.lock.hcl committed for reproducible installs)

@@ -472,15 +472,16 @@ Semicolon-separated `sed` commands applied after server is up:
 |-------|--------|
 | Base | `cm2network/steamcmd:root` (steam UID/GID `1000`) |
 | Entrypoint | `/entrypoint.sh` → SteamCMD `app_update 808040` → `/start-server.sh` |
-| Game install volume | `./server-files` → `/home/steam/smalland-server` (persisted; gitignored) |
-| Saves volume | `./data` → `.../SMALLAND/Saved` (gitignored) |
+| Game + saves volume | `./server-files` → `/home/steam/smalland-server` (persisted; gitignored). Saves live under `.../SMALLAND/Saved` inside this tree |
 | Start script | `./start-server.sh` → `/start-server.sh:ro` (env-driven params) |
 | Ports | `7777`/`7778` TCP+UDP |
+
+**Do not** bind-mount a separate host dir onto `.../SMALLAND/Saved`. That nest created `SMALLAND/` as `root:root` before SteamCMD commit, which failed with `Missing file permissions` on `SMALLAND/Binaries` (state `0x602`).
 
 ### Compose / env
 
 - `env_file`: `smalland.env` (from `smalland.env.example`; gitignored)
-- `game-server.sh` chowns `data/` + `server-files/` to `1000:1000`, `docker compose build`, then `up -d`
+- `game-server.sh` chowns `server-files/` to `1000:1000`, `docker compose build`, then `up -d`
 - First boot (empty `server-files`): long Steam download before listen; later wakes: short no-op `app_update` when already current
 - Do not patch a live VM for this — push and `terraform apply -replace=google_compute_instance.game_server`
 - `SERVER_PASSWORD` metadata upserts `PASSWORD=` in `smalland.env`
@@ -525,6 +526,7 @@ First `up` downloads app `808040` into `./server-files` (long). Later ups should
 
 | Date | Change |
 |------|--------|
+| 2026-07-25 | Smalland: drop nested `./data` Saved mount (SteamCMD `0x602` / root-owned `SMALLAND/`). |
 | 2026-07-25 | Smalland: replace Hub image with SteamCMD update-on-start (`Dockerfile`/`entrypoint.sh`, persist `server-files/`). |
 | 2026-07-25 | Usage-check contract + `idle-loop.sh`. Minecraft RCON moved to `usage-check.sh`. Smalland module Phases 1–3 + Appendix F. Wake Cloud Run documented. |
 | 2026-05-29 | Phase 1: Minecraft module files + per-game scripts. Zomboid restored with per-game scripts. Terraform uses `_modules/<game>/startup-script.sh`. Valheim/7d2d retain legacy metadata-driven scripts as placeholders. |

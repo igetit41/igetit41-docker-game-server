@@ -13,6 +13,6 @@ services:
       - "7778:7778/udp"
       - "7778:7778/tcp"
     volumes:
+      # Single mount: nested ./data over .../SMALLAND/Saved created root-owned parents and blocked SteamCMD commit
       - ./server-files:/home/steam/smalland-server
-      - ./data:/home/steam/smalland-server/SMALLAND/Saved
       - ./start-server.sh:/start-server.sh:ro
