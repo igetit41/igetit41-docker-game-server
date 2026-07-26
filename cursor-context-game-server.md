@@ -190,7 +190,7 @@ Terraform sets bootstrap on **create**, then `lifecycle.ignore_changes = [metada
 
 When player count stays 0 for `IDLE_COUNT` consecutive checks: `docker compose down` then `poweroff`.
 
-**Detection by game:** RCON `list` (Minecraft), RCON `players` (Zomboid — not yet on usage-check contract), UE log RemoteAddr join/leave (Smalland). See appendices.
+**Detection by game:** RCON `list` (Minecraft), RCON `players` (Zomboid — not yet on usage-check contract), Smalland session pulse / Join succeeded TTL (no leave line). See appendices.
 
 ---
 
@@ -498,7 +498,7 @@ Semicolon-separated `sed` commands applied after server is up:
 | Setting | Value |
 |---------|-------|
 | Script | `_modules/smalland/usage-check.sh` |
-| Method | Rebuild set each check from `docker logs --since` container `StartedAt` (no sticky state). Join: `NotifyAcceptingConnection` → `IP:port`. Leave: Close/Closing/Cleaned-up → drop `IP:port`. Do not also key on `Join succeeded` names (that double-counted). Legacy `/var/tmp/smalland-online-players` is deleted if present. |
+| Method | Names seen in last `SMALLAND_ONLINE_TTL_SECS` (default 420s) of `docker logs`: `Join succeeded: Name` or `Got the name form the Session Name` (~5m in-game pulse). No reliable leave line found — do not use `NotifyAcceptingConnection` (Accept spam during load → false positives). |
 | Ready wait | Full `docker logs` for `IpNetDriver listening on port` (observed on live boot). Never `--tail N` — streaming buries early markers. Each loop logs container status + matched line. |
 | Policy | `_modules/idle-loop.sh` |
 
@@ -510,7 +510,7 @@ Semicolon-separated `sed` commands applied after server is up:
 2. Align `terraform.tfvars` `SERVER_PASSWORD` with `smalland.env` `PASSWORD` (VM upserts `PASSWORD=` from metadata and overwrites the env line)
 3. Replace instance only — keep static IP + wake: `terraform apply -replace=google_compute_instance.game_server` (do not destroy wake resources / wake secret if players already have `wake_url` + `WAKE_STRING`)
 4. Join with Cross Play enabled. If `PRIVATE=1`, the server is hidden from the public browser — use direct connect / favorites
-5. Calibrate idle greps from one join/leave: `docker logs game-server | grep -E 'NotifyAcceptingConnection|Join succeeded|UNetConnection::Close'`
+5. Idle detection uses `Join succeeded` / `Got the name form the Session` within a ~7m TTL — not Accept/Close greps.
 
 ### Local smoke test (optional, before GCP)
 

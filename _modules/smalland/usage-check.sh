@@ -1,35 +1,42 @@
 #!/bin/bash
 # Smalland usage check: online players → stdout integer.
-# Rebuild from docker logs since this container start (no sticky state file).
-# Join: NotifyAcceptingConnection (IP:port). Leave: Close/Closing/Cleaned-up with IP:port.
-# Do not also count Join succeeded names (that double-counted one player).
+#
+# Evidence from Saved/docker logs (2026-07-26):
+#   - Real join: Login request → Join succeeded: Name
+#   - While online: "Got the name form the Session Name" about every 5 minutes
+#   - Quit: no UNet Close / RemoteAddr leave line we could find
+#   - NotifyAcceptingConnection alone is NOT in-world (Accept spam during load → false 1)
+#
+# Method: unique player names seen in Join succeeded / Session pulse within ONLINE_TTL.
 
 CONTAINER="${SMALLAND_CONTAINER:-game-server}"
+# >5m pulse interval; 7m TTL so one missed pulse after quit clears the player.
+ONLINE_TTL_SECS="${SMALLAND_ONLINE_TTL_SECS:-420}"
 
-STARTED=$(sudo docker inspect -f '{{.State.StartedAt}}' "$CONTAINER" 2>/dev/null || true)
-if [ -z "$STARTED" ] || [ "$STARTED" = "<no value>" ]; then
+rm -f /var/tmp/smalland-online-players
+
+if ! sudo docker inspect "$CONTAINER" >/dev/null 2>&1; then
   echo "-----usage-check-smalland count=0 (no-container)" >&2
   echo 0
   exit 0
 fi
 
-# Drop legacy sticky set from older builds (host path survives poweroff).
-rm -f /var/tmp/smalland-online-players
-
-LOGS=$(sudo docker logs --since "$STARTED" "$CONTAINER" 2>/dev/null || true)
+LOGS=$(sudo docker logs --since "${ONLINE_TTL_SECS}s" "$CONTAINER" 2>/dev/null || true)
 
 COUNT=$(printf '%s\n' "$LOGS" | awk '
-  BEGIN { IGNORECASE = 1 }
-  /NotifyAcceptingConnection/ {
-    if (match($0, /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+/)) {
-      online[substr($0, RSTART, RLENGTH)] = 1
-    }
+  /Join succeeded:/ {
+    name = $0
+    sub(/.*Join succeeded:[[:space:]]*/, "", name)
+    sub(/[[:space:]]+$/, "", name)
+    if (name != "") online[name] = 1
     next
   }
-  /UNetConnection::Close|Closing|Cleaned up/ {
-    if (match($0, /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+/)) {
-      delete online[substr($0, RSTART, RLENGTH)]
-    }
+  /Got the name form the Session / {
+    name = $0
+    sub(/.*Got the name form the Session[[:space:]]+/, "", name)
+    sub(/[[:space:]]+$/, "", name)
+    if (name != "") online[name] = 1
+    next
   }
   END {
     n = 0
@@ -38,5 +45,5 @@ COUNT=$(printf '%s\n' "$LOGS" | awk '
   }
 ')
 
-echo "-----usage-check-smalland count=$COUNT since=$STARTED" >&2
+echo "-----usage-check-smalland count=$COUNT ttl=${ONLINE_TTL_SECS}s" >&2
 echo "$COUNT"
