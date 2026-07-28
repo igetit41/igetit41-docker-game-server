@@ -28,18 +28,31 @@ Run stand-alone game servers on a cost-conscious GCP VM that:
 
 | Area | Status |
 |------|--------|
-| Default game in `terraform/locals.tf` | Still `_modules/minecraft/module` until Phase 4 switch |
-| `_modules/smalland/` | Active: SteamCMD update-on-start image, env/`start-server.sh`, log-based `usage-check.sh` |
+| Default game in `terraform/locals.tf` | `_modules/smalland/module` (Minecraft source commented) |
+| `_modules/smalland/` | Active: SteamCMD update-on-start; idle via session-pulse TTL `usage-check.sh` (no RCON/query) |
 | `_modules/idle-loop.sh` | Shared idle policy (interval / counter / poweroff) |
 | `_modules/minecraft/usage-check.sh` | RCON `list` → integer count |
+| `_modules/valheim/startup-script.sh` | Non-RCON path: HTTP `status.json` `.player_count` (image sidecar) |
 | Wake (Cloud Run) | `terraform/wake.tf` + `wake-service/` deployed; `WAKE_STRING` in tfvars |
 | `_modules/zomboid/` | Preserved; not yet on `usage-check.sh` contract |
 
 **Design decision (confirmed in chat):** Startup and game-server scripts should be **unique per game module**, not one shared script with conditionals. Each module owns ports, prep steps, and **`usage-check.sh`**.
 
-**Design decision (confirmed in chat):** Idle **policy** is shared (`_modules/idle-loop.sh`); **detection** is per-module (`usage-check.sh` must print a single integer). RCON stays inside RCON games (Minecraft/Zomboid), not in Smalland or root Terraform switches.
+**Design decision (confirmed in chat):** Idle **policy** is shared (`_modules/idle-loop.sh`); **detection** is per-module (`usage-check.sh` must print a single integer).
 
 **Design decision (confirmed in chat):** Do **not** delete Minecraft or Zomboid when switching games. Redeploy is a `locals.tf` source swap + VM replace. Running two games **simultaneously** is not implemented.
+
+### Player-count discovery (do not skip)
+
+`usage-check.sh` must **poll current players** when possible. **“No RCON” is not “no admin/status interface.”** Before log greps or socket heuristics, discover interfaces in this order and **probe with real empty/joined/quit data** before writing scripts:
+
+1. **Game admin query** — RCON, telnet admin (7d2d), or any documented console/`list`/`players` command
+2. **Image/sidecar status HTTP** — e.g. Valheim `lloesche/valheim-server` → `curl 127.0.0.1:80/status.json` → `.player_count` (already in `_modules/valheim/startup-script.sh` when `RCON_COMPATIBLE` is false)
+3. **Documented server-query protocol** — GameDig/A2S/etc. only if the game is known to answer
+4. **Only then** — log-derived presence with **observed** join/leave/pulse lines from *this* game (never generic UE folklore); document gaps (e.g. Smalland: no leave line)
+5. **Last resort** — disable idle auto-shutdown for that game, or schedule-based stop — do not invent Close greps or TCP peer counts without a successful probe
+
+Failed for Smalland (measured): RCON/admin console (hosts: none), TCP/UDP peer tables / docker netns `ss` (no player peers), generic UE disconnect greps (no such lines). Working stopgap: session-pulse TTL (see Appendix F).
 
 ---
 
@@ -190,7 +203,7 @@ Terraform sets bootstrap on **create**, then `lifecycle.ignore_changes = [metada
 
 When player count stays 0 for `IDLE_COUNT` consecutive checks: `docker compose down` then `poweroff`.
 
-**Detection by game:** RCON `list` (Minecraft), RCON `players` (Zomboid — not yet on usage-check contract), Smalland session pulse / Join succeeded TTL (no leave line). See appendices.
+**Detection by game:** RCON `list` (Minecraft), RCON `players` (Zomboid — not yet on usage-check contract), HTTP `status.json` (Valheim image, non-RCON), Smalland session-pulse TTL (no leave line / no query API found). See appendices and **Player-count discovery** above.
 
 ---
 
@@ -498,11 +511,13 @@ Semicolon-separated `sed` commands applied after server is up:
 | Setting | Value |
 |---------|-------|
 | Script | `_modules/smalland/usage-check.sh` |
-| Method | Names seen in last `SMALLAND_ONLINE_TTL_SECS` (default 420s) of `docker logs`: `Join succeeded: Name` or `Got the name form the Session Name` (~5m in-game pulse). No reliable leave line found — do not use `NotifyAcceptingConnection` (Accept spam during load → false positives). |
-| Ready wait | Full `docker logs` for `IpNetDriver listening on port` (observed on live boot). Never `--tail N` — streaming buries early markers. Each loop logs container status + matched line. |
-| Policy | `_modules/idle-loop.sh` |
+| Method | **Stopgap (evidence):** unique names in last `SMALLAND_ONLINE_TTL_SECS` (default 420s) of `docker logs` matching `Join succeeded: Name` or `Got the name form the Session Name` (~5m pulse while in-world). |
+| Not available | RCON/console/admin (hosting docs); GameDig/A2S (unsupported); TCP/UDP peer count (host + docker netns `ss` unchanged join↔quit); UE `Close`/`Cleanup` leave greps (no such lines observed). |
+| Do not use | `NotifyAcceptingConnection` alone (Accept spam during load → false positives). |
+| Ready wait | Full `docker logs` for `IpNetDriver listening on port`. Never `--tail N`. |
+| Policy | `_modules/idle-loop.sh` — after quit, count may stay `1` for up to ~TTL after last pulse/join (~7m). |
 
-**Calibrate after first live join/leave** — adjust greps if Smalland’s log lines differ from stock UE patterns.
+If a real poll API appears later, replace this TTL hack; do not add more guessed leave greps.
 
 ### Redeploy (Phase 4 done; locals point at Smalland)
 
@@ -531,6 +546,7 @@ First `up` downloads app `808040` into `./server-files` (long). Later ups should
 
 | Date | Change |
 |------|--------|
+| 2026-07-26 | Player-count discovery order (not RCON-only). Smalland: failed probes documented; idle = session-pulse TTL stopgap. Bootstrap + `ignore_changes` on startup script. |
 | 2026-07-25 | Smalland: drop nested `./data` Saved mount (SteamCMD `0x602` / root-owned `SMALLAND/`). |
 | 2026-07-25 | Smalland: replace Hub image with SteamCMD update-on-start (`Dockerfile`/`entrypoint.sh`, persist `server-files/`). |
 | 2026-07-25 | Usage-check contract + `idle-loop.sh`. Minecraft RCON moved to `usage-check.sh`. Smalland module Phases 1–3 + Appendix F. Wake Cloud Run documented. |
