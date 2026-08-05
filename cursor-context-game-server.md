@@ -4,7 +4,7 @@ Workload repo: `./GitHub/igetit41-docker-game-server`
 
 Terraform on **Google Cloud** provisions a single **Compute Engine** VM (static IP, firewall rules, game-specific metadata). On first boot the VM installs Docker, clones this repo, and runs **Docker Compose** from `_modules/<game>/`. A **systemd** unit pulls `main` and restarts the stack. Idle detection uses a **shared idle loop** plus a **per-game `usage-check.sh`** that prints an online-player count; when that stays `0` long enough the VM `poweroff`s.
 
-A **Cloud Run wake** service (`terraform/wake.tf`, `wake-service/`) presents a public form; submitting the wake string calls `instances.start` on the game VM.
+A **Cloud Run wake** service (`terraform/wake.tf`, `wake-service/`) presents a public form; submitting the wake string calls `instances.start` on the game VM. The same pattern is used by `./GitHub/media_collection` (`jellyfin-wake`).
 
 This document is the cross-chat context for this workload. The main body is **game-agnostic**. Per-game details live in **appendices** at the end and should be updated as each module matures.
 
@@ -252,7 +252,6 @@ IAP SSH command: `terraform output` from `terraform/outputs.tf`.
 - Dedicated **systemd unit** for idle shutdown (instead of startup-script loop)
 - **Metadata-driven** idle tuning (`CHECK_INTERVAL`, `IDLE_COUNT`)
 - **Per-game config files** as source of truth (example + gitignored local copy)
-- **Cold-start / wake endpoint** (Cloud Run calling `instances.start` after idle `poweroff`)
 - **Second VM** resource for running two games in parallel
 - **Dedicated service account** with least-privilege IAM for the game VM
 
