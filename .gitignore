@@ -1,21 +1,61 @@
-# Local Terraform variables (often contain secrets)
-terraform/terraform.tfvars
+# Local Terraform variables (secrets / project-specific)
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+# Keep example templates tracked
+!*.tfvars.example
+!*.auto.tfvars.example
 
-# CurseForge API key and local Minecraft overrides
-_modules/minecraft/minecraft.env
+# Per-game local env overrides (secrets, API keys)
+*.env
+!.env.example
+!**/*.env.example
+
+# Minecraft / Smalland local secrets & persisted install
 _modules/minecraft/cf-api-key.secret
-
-# Smalland local overrides / persisted install
-_modules/smalland/smalland.env
 _modules/smalland/server-files/
 
-# Terraform plugin cache (keep .terraform.lock.hcl committed for reproducible installs)
-terraform/.terraform/
-
-# State files if created under the repo tree
+# Terraform plugin cache & local state (keep .terraform.lock.hcl committed)
+**/.terraform/
 *.tfstate
 *.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
 
-*/*.env
-*/*.tfvars
-*/*.txt
+# Keys / credentials
+*.pem
+*.key
+id_rsa*
+*-key.json
+*-credentials.json
+service-account-*.json
+sa_key.json
+
+# Local notes (often contain live passwords / project IDs)
+*_notes.txt
+*notes*.txt
+.env.local
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+*.bak
+*.backup
+*.log
+tmp/
+temp/
+.tmp/
