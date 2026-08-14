@@ -82,15 +82,10 @@ if [ -n "$SERVER_PASSWORD" ]; then
   echo "-----game-server-output-password-from-metadata"
 fi
 
-echo "-----game-server-output-valheim-data-perms"
+echo "-----game-server-output-valheim-data-dirs"
 mkdir -p "$MODULE_DIR/config" "$MODULE_DIR/data" \
   "$MODULE_DIR/config/bepinex/plugins" \
   "$MODULE_DIR/config/bepinex/config"
-docker run --rm \
-  -v "$MODULE_DIR/config:/vconfig" \
-  -v "$MODULE_DIR/data:/vdata" \
-  alpine:3.19 \
-  sh -c "chown -R 1000:1000 /vconfig /vdata"
 
 BEPINEX_FLAG=$(grep -E '^BEPINEX=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^BEPINEX=//')
 PACK_ID=$(grep -E '^THUNDERSTORE_PACK=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^THUNDERSTORE_PACK=//')
@@ -191,11 +186,13 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
       fi
       echo "-----thunderstore-install-package $author/$name@$version"
       zipfile="$STAGING/${author}-${name}-${version}.zip"
-      curl -sfL --retry 3 -o "$zipfile" "$DL_BASE/$author/$name/$version/"
+      curl -sfL --retry 3 -o "$zipfile" "$DL_BASE/$author/$name/$version/" \
+        || { echo "ERROR: Thunderstore download failed $author/$name@$version"; exit 1; }
       extract="$STAGING/extract-$$"
       rm -rf "$extract"
       mkdir -p "$extract"
-      unzip -qo "$zipfile" -d "$extract"
+      unzip -qo "$zipfile" -d "$extract" \
+        || { echo "ERROR: Thunderstore unzip failed $zipfile"; exit 1; }
       [ -d "$extract/BepInEx/config" ] && mkdir -p "$CONFIG_DIR" && cp -a "$extract/BepInEx/config"/. "$CONFIG_DIR/"
       [ -d "$extract/BepInEx/patchers" ] && mkdir -p "$PATCHERS_DIR" && cp -a "$extract/BepInEx/patchers"/. "$PATCHERS_DIR/"
       [ -d "$extract/patchers" ] && mkdir -p "$PATCHERS_DIR" && cp -a "$extract/patchers"/. "$PATCHERS_DIR/"
@@ -216,7 +213,6 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
 
     dlls=$(find "$PLUGINS_DIR" -type f -name '*.dll' | wc -l)
     printf '%s\n' "$STAMP" > "$STAMP_FILE"
-    chown -R 1000:1000 "$BEPINEX_ROOT" "$STAMP_FILE" 2>/dev/null || true
     echo "-----thunderstore-install-done $STAMP dlls=$dlls"
     if [ "$dlls" -lt 1 ]; then
       echo "ERROR: Thunderstore install produced no plugin DLLs"
@@ -233,6 +229,13 @@ if ! command -v docker >/dev/null 2>&1; then
   echo "ERROR: docker is not installed; refusing compose up."
   exit 1
 fi
+
+echo "-----game-server-output-valheim-data-perms"
+docker run --rm \
+  -v "$MODULE_DIR/config:/vconfig" \
+  -v "$MODULE_DIR/data:/vdata" \
+  alpine:3.19 \
+  sh -c "chown -R 1000:1000 /vconfig /vdata"
 
 echo "-----game-server-output-docker-compose"
 docker compose --file "$COMPOSE_FILE" up -d
