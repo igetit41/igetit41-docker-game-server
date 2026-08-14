@@ -1,93 +1,96 @@
+variable "server_password" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
 
-variable "server_password" { type = string }
+variable "rcon_password" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
 
-variable "rcon_password" { type = string }
-
-locals {
-    rcon_pw_file_path = "./serverfiles"
-    rcon_pw_file = "sdtdserver.xml"
+output "game_name" {
+  value = "valheim"
 }
 
 output "game_env_file" {
-  value = ""
+  value = "valheim.env"
 }
 
 output "game_api_key_var" {
   value = ""
 }
 
-output "game_name" {
-    value = "valheim"
-}
-
 output "firewall_tcp" {
-    value = []
+  value = []
 }
 
 output "firewall_udp" {
-    value = ["2456-2458"]
+  value = ["2456-2458"]
 }
 
+# Idle uses STATUS_HTTP /status.json (see usage-check.sh), not RCON.
 output "rcon_compatible" {
-    value = "false"
+  value = "false"
 }
 
 output "rcon_pw" {
-    value = "${var.rcon_password}"
+  value = var.rcon_password
 }
 
 output "rcon_other_args" {
-    value = ""
+  value = ""
 }
 
 output "rcon_pw_var" {
-    value = "TelnetPassword"
+  value = ""
 }
 
 output "rcon_pw_var_line" {
-    value = "        <property name=\"TelnetPassword\" value=\"${var.rcon_password}\"/>"
+  value = ""
 }
 
 output "rcon_pw_file" {
-    value = "${local.rcon_pw_file}"
+  value = ""
 }
 
 output "rcon_pw_file_path" {
-    value = "${local.rcon_pw_file_path}"
+  value = ""
 }
 
 output "rcon_player_check" {
-    value = "listplayerids"
+  value = ""
 }
 
 output "rcon_player_check_grep" {
-    value = "grep -E Total"
+  value = ""
 }
 
 output "rcon_live_test" {
-    value = "help"
+  value = ""
 }
 
 output "rcon_live_test_grep" {
-    value = "grep -Eo spawnairdrop"
+  value = ""
 }
 
 output "rcon_commands" {
-    value = ""
+  value = ""
 }
 
 output "rcon_reload" {
-    value = ""
+  value = ""
 }
 
 output "exec_commands" {
-    value = ""
+  value = ""
 }
 
 output "server_restart_count" {
-    value = "0"
+  value = "0"
 }
 
 output "rcon_port" {
-    value = "8081"
+  value = ""
 }

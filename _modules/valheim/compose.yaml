@@ -1,17 +1,17 @@
 services:
-  valheim:
+  game-server:
     image: ghcr.io/lloesche/valheim-server
     container_name: game-server
+    restart: unless-stopped
+    stop_grace_period: 2m
     cap_add:
       - sys_nice
-    volumes:
-      - $HOME/valheim-server/config:/config
-      - $HOME/valheim-server/data:/opt/valheim
+    env_file:
+      - ./valheim.env
     ports:
       - "2456-2458:2456-2458/udp"
-      - "9001:9001/tcp"
-      - "80:80/tcp"
-    env_file:
-      - $HOME/igetit41-docker-game-server/game-server/valheim/valheim.env
-    restart: always
-    stop_grace_period: 2m
+      # Status JSON for idle checks — localhost only (not in GCP firewall)
+      - "127.0.0.1:80:80/tcp"
+    volumes:
+      - ./config:/config
+      - ./data:/opt/valheim

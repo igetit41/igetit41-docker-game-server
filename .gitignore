@@ -12,9 +12,12 @@
 !.env.example
 !**/*.env.example
 
-# Minecraft / Smalland local secrets & persisted install
+# Minecraft / Smalland / Valheim local secrets & persisted install
 _modules/minecraft/cf-api-key.secret
+_modules/minecraft/data/
 _modules/smalland/server-files/
+_modules/valheim/config/
+_modules/valheim/data/
 
 # Terraform plugin cache & local state (keep .terraform.lock.hcl committed)
 **/.terraform/

@@ -6,15 +6,31 @@ Terraform on **Google Cloud** provisions a single **Compute Engine** VM (static 
 
 | Game | Compose path | Terraform module (`_modules/.../module`) |
 |------|----------------|-----------------------------------------------|
-| **Minecraft (CurseForge modpack)** | `_modules/minecraft/` | Yes (default in `terraform/locals.tf`) |
+| **Valheim (Thunderstore RtDMMO)** | `_modules/valheim/` | Yes (default in `terraform/locals.tf`) |
+| Smalland | `_modules/smalland/` | Yes |
+| Minecraft (CurseForge modpack) | `_modules/minecraft/` | Yes |
 | Project Zomboid | `_modules/zomboid/` | Yes |
-| Valheim | `_modules/valheim/` | Yes |
 | 7 Days to Die | `_modules/7d2d/` | Yes |
 | Enshrouded | `_modules/enshrouded/` | No (Compose only) |
 
-The active game is chosen by the `module "vars"` `source` in `terraform/locals.tf`. That module supplies `game_name`, firewall ports, and (for legacy modules) RCON metadata. **Minecraft** and **Zomboid** use per-module `startup-script.sh` and `game-server.sh` under `_modules/<game>/`.
+The active game is chosen by the `module "vars"` `source` in `terraform/locals.tf`. That module supplies `game_name`, firewall ports, and optional RCON metadata. **Smalland**, **Minecraft**, **Zomboid**, and **Valheim** use per-module `startup-script.sh`, `game-server.sh`, and `usage-check.sh` under `_modules/<game>/`.
 
 Per-game images and env vars live in each `compose.yaml`. Edit the `# Changes Section` in that file when switching games or changing server settings. Do not commit real passwords; use placeholders locally and inject secrets via your normal process.
+
+### Valheim (Thunderstore RtDMMO)
+
+Default stack: [lloesche/valheim-server](https://github.com/lloesche/valheim-server-docker) with [Soloredis RtDMMO](https://thunderstore.io/c/valheim/p/Soloredis/RtDMMO/) (`BEPINEX=true`, `CROSSPLAY=false`). `_modules/valheim/install-thunderstore-pack.sh` downloads the pack and dependencies into `config/bepinex/` on boot.
+
+**Secrets stay in gitignored local files.**
+
+| Secret | Local file (gitignored) |
+|--------|-------------------------|
+| Join password | `terraform/terraform.tfvars` (`SERVER_PASSWORD` → `SERVER_PASS`) |
+| Server name / pack pin | `_modules/valheim/valheim.env` |
+
+Players (PC and Steam Deck) install the same pack with r2modman or Gale. Wake is unchanged: Cloud Run form starts VM `game-server`.
+
+World/config persist in `_modules/valheim/config/` and `_modules/valheim/data/` on the VM.
 
 ### Minecraft (CurseForge)
 
@@ -71,3 +87,5 @@ Idle detection and auto-shutdown today live in a long-running loop inside GCE **
 - [itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) (Minecraft image; CurseForge modpack support)
 - [CurseForge API keys](https://console.curseforge.com/)
 - [vinanrra/Docker-7DaysToDie](https://github.com/vinanrra/Docker-7DaysToDie) (7DTD stack reference)
+- [lloesche/valheim-server-docker](https://github.com/lloesche/valheim-server-docker)
+- [Soloredis RtDMMO](https://thunderstore.io/c/valheim/p/Soloredis/RtDMMO/)
