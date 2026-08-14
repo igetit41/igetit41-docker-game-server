@@ -122,8 +122,9 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
     PACK_JSON=$(curl -sfL "$API_BASE/$PACK_AUTHOR/$PACK_NAME/" | jq -c '.latest')
   fi
   PACK_VER=$(printf '%s' "$PACK_JSON" | jq -r '.version_number')
-  STAMP="v2|${PACK_AUTHOR}-${PACK_NAME}-${PACK_VER}"
-  echo "-----thunderstore-install-resolve $PACK_AUTHOR/$PACK_NAME@$PACK_VER"
+  # v3: install Thunderstore *latest* of each pack dependency (r2modman "update all"), not pack pins.
+  STAMP="v3|${PACK_AUTHOR}-${PACK_NAME}-${PACK_VER}|latest-deps"
+  echo "-----thunderstore-install-resolve $PACK_AUTHOR/$PACK_NAME@$PACK_VER (deps=latest)"
 
   if [ "${THUNDERSTORE_FORCE:-0}" != "1" ] && [ -f "$STAMP_FILE" ] && [ "$(cat "$STAMP_FILE")" = "$STAMP" ] \
       && find "$PLUGINS_DIR" -type f -name '*.dll' -print -quit 2>/dev/null | grep -q .; then
@@ -156,6 +157,7 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
       fi
     }
 
+    # Seed with pack; for every dependency use Thunderstore latest (ignore pin versions).
     ts_enqueue "$PACK_AUTHOR" "$PACK_NAME" "$PACK_VER"
     idx=0
     while [ "$idx" -lt "${#QUEUE_KEYS[@]}" ]; do
@@ -168,8 +170,13 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
       while IFS= read -r dep; do
         [ -z "$dep" ] && continue
         dparsed=$(ts_parse "$dep") || continue
-        IFS=$'\t' read -r da dn dv <<<"$dparsed"
-        ts_enqueue "$da" "$dn" "$dv"
+        IFS=$'\t' read -r da dn _dv <<<"$dparsed"
+        latest=$(curl -sfL "$API_BASE/$da/$dn/" | jq -r '.latest.version_number')
+        if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+          echo "WARN: no latest for $da/$dn"
+          continue
+        fi
+        ts_enqueue "$da" "$dn" "$latest"
       done < <(printf '%s' "$meta" | jq -r '.dependencies[]?')
     done
 
@@ -182,6 +189,11 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
       IFS=$'\t' read -r author name version <<<"$parsed"
       if [ "${author}-${name}" = "denikson-BepInExPack_Valheim" ]; then
         echo "-----thunderstore-install-skip-bepinex-pack ${author}-${name}"
+        continue
+      fi
+      # Modpack zip is dependency metadata only — skip installing it as a plugin.
+      if [ "${author}-${name}" = "${PACK_AUTHOR}-${PACK_NAME}" ]; then
+        echo "-----thunderstore-install-skip-modpack-meta ${author}-${name}"
         continue
       fi
       echo "-----thunderstore-install-package $author/$name@$version"
