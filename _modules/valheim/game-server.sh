@@ -109,6 +109,11 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
   /bin/bash "$MODULE_DIR/install-thunderstore-pack.sh" "$MODULE_DIR" "$PACK_ID" "$PACK_VER"
 fi
 
+if ! command -v docker >/dev/null 2>&1; then
+  echo "ERROR: docker is not installed; refusing compose up."
+  exit 1
+fi
+
 echo "-----game-server-output-docker-compose"
 docker compose --file "$COMPOSE_FILE" up -d
 echo "-----game-server-output-compose-up-ok"

@@ -22,12 +22,30 @@ MODULE_DIR="$REPO_ROOT/_modules/$GAME_NAME"
 COMPOSE_FILE="$MODULE_DIR/compose.yaml"
 USAGE_CHECK="$MODULE_DIR/usage-check.sh"
 
+wait_for_apt() {
+  local n=0
+  while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
+     || fuser /var/lib/apt/lists/lock >/dev/null 2>&1 \
+     || fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
+    n=$((n + 1))
+    echo "-----startup-script-output-waiting-for-apt-$n"
+    sleep 5
+    if [ "$n" -gt 60 ]; then
+      echo "-----startup-script-output-apt-lock-timeout"
+      return 1
+    fi
+  done
+  return 0
+}
+
 # First-run = Docker missing (bootstrap may already have cloned the repo).
 if ! command -v docker >/dev/null 2>&1; then
     echo "-----startup-script-output-first-run"
     FIRST_RUN=true
 
+    wait_for_apt
     sudo apt update -y
+    wait_for_apt
     sudo apt install -y net-tools jq git curl unzip
 
     echo "-----startup-script-output-add-user"
@@ -39,6 +57,7 @@ if ! command -v docker >/dev/null 2>&1; then
     cd /home/game-server
 
     echo "-----startup-script-output-install-docker"
+    wait_for_apt
     sudo apt-get install -y ca-certificates curl
     sudo install -m 0755 -d /etc/apt/keyrings
     sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
@@ -47,11 +66,16 @@ if ! command -v docker >/dev/null 2>&1; then
     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
     sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    wait_for_apt
     sudo apt-get update -y
+    wait_for_apt
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     sudo service docker start
     sudo usermod -a -G docker game-server
-    newgrp docker
+    if ! command -v docker >/dev/null 2>&1; then
+      echo "-----startup-script-output-docker-install-failed"
+      exit 1
+    fi
 
     echo "-----startup-script-output-clone-repo"
     if [ ! -d "$STANDARD_REPO/.git" ]; then
