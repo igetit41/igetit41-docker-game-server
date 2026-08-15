@@ -91,6 +91,14 @@ mkdir -p "$MODULE_DIR/config" "$MODULE_DIR/data" \
   "$MODULE_DIR/config/bepinex/plugins" \
   "$MODULE_DIR/config/bepinex/config"
 
+# game-server must own config for Thunderstore writes; container later uses 1000:1000.
+echo "-----game-server-output-valheim-config-owner"
+docker run --rm \
+  -v "$MODULE_DIR/config:/vconfig" \
+  -v "$MODULE_DIR/data:/vdata" \
+  alpine:3.19 \
+  sh -c "chown -R $(id -u):$(id -g) /vconfig /vdata"
+
 BEPINEX_FLAG=$(grep -E '^BEPINEX=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^BEPINEX=//')
 PACK_ID=$(grep -E '^THUNDERSTORE_PACK=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^THUNDERSTORE_PACK=//')
 PACK_VER=$(grep -E '^THUNDERSTORE_PACK_VERSION=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^THUNDERSTORE_PACK_VERSION=//')
