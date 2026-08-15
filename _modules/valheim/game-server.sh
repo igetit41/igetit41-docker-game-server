@@ -65,6 +65,13 @@ COMPOSE_FILE="$MODULE_DIR/compose.yaml"
 git -C "$REPO_ROOT" reset --hard
 git -C "$REPO_ROOT" pull origin main
 
+# Pull replaces this file on disk; re-exec so the rest of the run uses the new script.
+if [ "${GAME_SERVER_REEXEC:-0}" != "1" ]; then
+  export GAME_SERVER_REEXEC=1
+  echo "-----game-server-output-reexec-after-pull"
+  exec bash "${BASH_SOURCE[0]}"
+fi
+
 chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
 chmod +x "$MODULE_DIR"/*.sh 2>/dev/null || true
 chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
@@ -256,5 +263,6 @@ docker run --rm \
   sh -c "chown -R 1000:1000 /vconfig /vdata"
 
 echo "-----game-server-output-docker-compose"
-docker compose --file "$COMPOSE_FILE" up -d
+# Recreate so BepInEx reloads plugins after Thunderstore sync (up -d alone leaves a running container).
+docker compose --file "$COMPOSE_FILE" up -d --force-recreate
 echo "-----game-server-output-compose-up-ok"
