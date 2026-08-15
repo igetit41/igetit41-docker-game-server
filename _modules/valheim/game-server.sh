@@ -91,8 +91,8 @@ BEPINEX_FLAG=$(grep -E '^BEPINEX=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail 
 PACK_ID=$(grep -E '^THUNDERSTORE_PACK=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^THUNDERSTORE_PACK=//')
 PACK_VER=$(grep -E '^THUNDERSTORE_PACK_VERSION=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^THUNDERSTORE_PACK_VERSION=//')
 
-# Thunderstore pack → config/bepinex (Valheim prep, same as chown / compose).
-# Highest version per Author-Name wins so older transitive pins cannot overwrite Jotunn.
+# Thunderstore pack → config/bepinex. Pack membership from RtDMMO; each dep at
+# Thunderstore latest. Re-resolve on every start; reinstall when versions drift.
 if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
   echo "-----game-server-output-thunderstore-pack $PACK_ID ${PACK_VER:-latest}"
   sudo apt-get install -y jq unzip >/dev/null 2>&1 || true
@@ -106,7 +106,6 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
   CONFIG_DIR="$BEPINEX_ROOT/config"
   PATCHERS_DIR="$BEPINEX_ROOT/patchers"
   STAGING="$MODULE_DIR/config/.thunderstore-staging"
-  STAMP_FILE="$MODULE_DIR/config/.thunderstore-pack-stamp"
   mkdir -p "$PLUGINS_DIR" "$CONFIG_DIR" "$PATCHERS_DIR" "$STAGING"
 
   if [[ ! "$PACK_ID" =~ ^([^-]+)-(.+)$ ]]; then
@@ -122,64 +121,71 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
     PACK_JSON=$(curl -sfL "$API_BASE/$PACK_AUTHOR/$PACK_NAME/" | jq -c '.latest')
   fi
   PACK_VER=$(printf '%s' "$PACK_JSON" | jq -r '.version_number')
-  # v3: install Thunderstore *latest* of each pack dependency (r2modman "update all"), not pack pins.
-  STAMP="v3|${PACK_AUTHOR}-${PACK_NAME}-${PACK_VER}|latest-deps"
+  RESOLVED_FILE="$MODULE_DIR/config/.thunderstore-resolved"
   echo "-----thunderstore-install-resolve $PACK_AUTHOR/$PACK_NAME@$PACK_VER (deps=latest)"
 
-  if [ "${THUNDERSTORE_FORCE:-0}" != "1" ] && [ -f "$STAMP_FILE" ] && [ "$(cat "$STAMP_FILE")" = "$STAMP" ] \
+  declare -A BEST_VER=()
+  QUEUE_KEYS=()
+
+  ts_parse() {
+    if [[ ! "$1" =~ ^([^-]+)-(.+)-([0-9]+\.[0-9].*)$ ]]; then
+      return 1
+    fi
+    printf '%s\t%s\t%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"
+  }
+
+  ts_enqueue() {
+    local author="$1" name="$2" version="$3" key="${1}-${2}"
+    local cur="${BEST_VER[$key]:-}"
+    if [ -z "$cur" ]; then
+      BEST_VER[$key]="$version"
+      QUEUE_KEYS+=("$key")
+      return 0
+    fi
+    local best
+    best=$(printf '%s\n%s\n' "$cur" "$version" | sort -V | tail -n1)
+    if [ "$best" != "$cur" ]; then
+      echo "-----thunderstore-install-upgrade $key $cur -> $best"
+      BEST_VER[$key]="$best"
+      QUEUE_KEYS+=("$key")
+    fi
+  }
+
+  # Seed with pack; for every dependency use Thunderstore latest (ignore pin versions).
+  ts_enqueue "$PACK_AUTHOR" "$PACK_NAME" "$PACK_VER"
+  idx=0
+  while [ "$idx" -lt "${#QUEUE_KEYS[@]}" ]; do
+    key="${QUEUE_KEYS[$idx]}"
+    idx=$((idx + 1))
+    parsed=$(ts_parse "${key}-${BEST_VER[$key]}") || continue
+    IFS=$'\t' read -r author name version <<<"$parsed"
+    echo "-----thunderstore-install-resolve-deps $author/$name@$version"
+    meta=$(curl -sfL "$API_BASE/$author/$name/$version/")
+    while IFS= read -r dep; do
+      [ -z "$dep" ] && continue
+      dparsed=$(ts_parse "$dep") || continue
+      IFS=$'\t' read -r da dn _dv <<<"$dparsed"
+      latest=$(curl -sfL "$API_BASE/$da/$dn/" | jq -r '.latest.version_number')
+      if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+        echo "WARN: no latest for $da/$dn"
+        continue
+      fi
+      ts_enqueue "$da" "$dn" "$latest"
+    done < <(printf '%s' "$meta" | jq -r '.dependencies[]?')
+  done
+
+  # Snapshot of Author-Name=version — if Thunderstore moved since last boot, reinstall.
+  RESOLVED_TEXT=$(
+    for key in "${!BEST_VER[@]}"; do
+      printf '%s=%s\n' "$key" "${BEST_VER[$key]}"
+    done | sort
+  )
+
+  if [ "${THUNDERSTORE_FORCE:-0}" != "1" ] && [ -f "$RESOLVED_FILE" ] \
+      && [ "$(cat "$RESOLVED_FILE")" = "$RESOLVED_TEXT" ] \
       && find "$PLUGINS_DIR" -type f -name '*.dll' -print -quit 2>/dev/null | grep -q .; then
-    echo "-----thunderstore-install-skip-stamp-match $STAMP"
+    echo "-----thunderstore-install-skip-resolved-match packages=$(printf '%s\n' "$RESOLVED_TEXT" | wc -l)"
   else
-    declare -A BEST_VER=()
-    QUEUE_KEYS=()
-
-    ts_parse() {
-      if [[ ! "$1" =~ ^([^-]+)-(.+)-([0-9]+\.[0-9].*)$ ]]; then
-        return 1
-      fi
-      printf '%s\t%s\t%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"
-    }
-
-    ts_enqueue() {
-      local author="$1" name="$2" version="$3" key="${1}-${2}"
-      local cur="${BEST_VER[$key]:-}"
-      if [ -z "$cur" ]; then
-        BEST_VER[$key]="$version"
-        QUEUE_KEYS+=("$key")
-        return 0
-      fi
-      local best
-      best=$(printf '%s\n%s\n' "$cur" "$version" | sort -V | tail -n1)
-      if [ "$best" != "$cur" ]; then
-        echo "-----thunderstore-install-upgrade $key $cur -> $best"
-        BEST_VER[$key]="$best"
-        QUEUE_KEYS+=("$key")
-      fi
-    }
-
-    # Seed with pack; for every dependency use Thunderstore latest (ignore pin versions).
-    ts_enqueue "$PACK_AUTHOR" "$PACK_NAME" "$PACK_VER"
-    idx=0
-    while [ "$idx" -lt "${#QUEUE_KEYS[@]}" ]; do
-      key="${QUEUE_KEYS[$idx]}"
-      idx=$((idx + 1))
-      parsed=$(ts_parse "${key}-${BEST_VER[$key]}") || continue
-      IFS=$'\t' read -r author name version <<<"$parsed"
-      echo "-----thunderstore-install-resolve-deps $author/$name@$version"
-      meta=$(curl -sfL "$API_BASE/$author/$name/$version/")
-      while IFS= read -r dep; do
-        [ -z "$dep" ] && continue
-        dparsed=$(ts_parse "$dep") || continue
-        IFS=$'\t' read -r da dn _dv <<<"$dparsed"
-        latest=$(curl -sfL "$API_BASE/$da/$dn/" | jq -r '.latest.version_number')
-        if [ -z "$latest" ] || [ "$latest" = "null" ]; then
-          echo "WARN: no latest for $da/$dn"
-          continue
-        fi
-        ts_enqueue "$da" "$dn" "$latest"
-      done < <(printf '%s' "$meta" | jq -r '.dependencies[]?')
-    done
-
     echo "-----thunderstore-install-clear-plugins"
     rm -rf "$PLUGINS_DIR"
     mkdir -p "$PLUGINS_DIR"
@@ -224,8 +230,8 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
     done
 
     dlls=$(find "$PLUGINS_DIR" -type f -name '*.dll' | wc -l)
-    printf '%s\n' "$STAMP" > "$STAMP_FILE"
-    echo "-----thunderstore-install-done $STAMP dlls=$dlls"
+    printf '%s\n' "$RESOLVED_TEXT" > "$RESOLVED_FILE"
+    echo "-----thunderstore-install-done packages=$(printf '%s\n' "$RESOLVED_TEXT" | wc -l) dlls=$dlls"
     if [ "$dlls" -lt 1 ]; then
       echo "ERROR: Thunderstore install produced no plugin DLLs"
       exit 1
