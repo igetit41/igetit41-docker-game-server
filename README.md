@@ -19,7 +19,7 @@ Per-game images and env vars live in each `compose.yaml`. Edit the `# Changes Se
 
 ### Valheim (Thunderstore RtDMMO)
 
-Default stack: [lloesche/valheim-server](https://github.com/lloesche/valheim-server-docker) with [Soloredis RtDMMO](https://thunderstore.io/c/valheim/p/Soloredis/RtDMMO/) (`BEPINEX=true`, `CROSSPLAY=false`). On each `game-server` start the unit pulls `main`, re-runs the updated script, syncs Thunderstore latest into `config/bepinex/` when versions drift, and recreates the container so plugins reload.
+Default stack: [lloesche/valheim-server](https://github.com/lloesche/valheim-server-docker) with [Soloredis RtDMMO](https://thunderstore.io/c/valheim/p/Soloredis/RtDMMO/) (`BEPINEX=true`, `CROSSPLAY=false`). Each `game-server` start resolves pack deps to Thunderstore latest and refreshes `config/bepinex/` only when versions drift.
 
 **Secrets stay in gitignored local files.**
 

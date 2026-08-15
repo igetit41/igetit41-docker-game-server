@@ -135,20 +135,27 @@ if [ -f "$COMPOSE_FILE" ] && [ ! -f /etc/systemd/system/game-server.service ]; t
     sudo systemctl restart game-server
 fi
 
-# Root refreshes the unit every boot (game-server user has no sudo).
+# Install or update game-server.service; restart only if the unit file changed.
 if [ -f "$REPO_ROOT/_modules/game-server.service" ]; then
   echo "-----startup-script-output-refresh-game-server-unit"
-  sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
-  sudo systemctl daemon-reload
-  sudo systemctl enable game-server
-  sudo systemctl restart game-server
+  UNIT_SRC="$REPO_ROOT/_modules/game-server.service"
+  UNIT_DST=/etc/systemd/system/game-server.service
+  if [ ! -f "$UNIT_DST" ] || ! cmp -s "$UNIT_SRC" "$UNIT_DST"; then
+    sudo cp "$UNIT_SRC" "$UNIT_DST"
+    sudo systemctl daemon-reload
+    sudo systemctl enable game-server
+    sudo systemctl restart game-server
+  elif ! systemctl is-active --quiet game-server; then
+    sudo systemctl enable game-server
+    sudo systemctl start game-server
+  fi
 fi
 
 echo "-----startup-script-output-waiting-for-valheim"
 LOOP_VAR=0
 while true; do
   LOOP_VAR=$((LOOP_VAR + 1))
-  # Ensure the unit is running (Thunderstore sync can take several minutes before compose up).
+  # Start game-server.service if it is not active.
   if [ -f /etc/systemd/system/game-server.service ] \
       && ! systemctl is-active --quiet game-server; then
     echo "-----startup-script-output-starting-game-server-unit"

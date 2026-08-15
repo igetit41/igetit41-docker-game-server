@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Write module env from GAME_ENV_B64 metadata.
-# Sourced by startup-script.sh on first boot; also run when executed by systemd.
+# Write module env from GAME_ENV_B64 metadata. Sourced by startup-script.sh; also run by systemd.
 
 install_env_from_metadata() {
   local dest="${1:?env file destination required}"
@@ -65,7 +64,7 @@ COMPOSE_FILE="$MODULE_DIR/compose.yaml"
 git -C "$REPO_ROOT" reset --hard
 git -C "$REPO_ROOT" pull origin main
 
-# Pull replaces this file on disk; re-exec so the rest of the run uses the new script.
+# Re-exec after pull so this process runs the on-disk script.
 if [ "${GAME_SERVER_REEXEC:-0}" != "1" ]; then
   export GAME_SERVER_REEXEC=1
   echo "-----game-server-output-reexec-after-pull"
@@ -75,7 +74,6 @@ fi
 chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
 chmod +x "$MODULE_DIR"/*.sh 2>/dev/null || true
 chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
-# Unit file updates require root — only startup-script (metadata) installs/refreshes it.
 
 echo "-----game-server-output-install-env"
 install_env_from_metadata "$MODULE_DIR/valheim.env"
@@ -97,8 +95,8 @@ BEPINEX_FLAG=$(grep -E '^BEPINEX=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail 
 PACK_ID=$(grep -E '^THUNDERSTORE_PACK=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^THUNDERSTORE_PACK=//')
 PACK_VER=$(grep -E '^THUNDERSTORE_PACK_VERSION=' "$MODULE_DIR/valheim.env" 2>/dev/null | tail -n1 | sed 's/^THUNDERSTORE_PACK_VERSION=//')
 
-# Thunderstore pack → config/bepinex. Pack membership from RtDMMO; each dep at
-# Thunderstore latest. Re-resolve on every start; reinstall when versions drift.
+# Thunderstore: pack dependency list at latest; reinstall only when .thunderstore-resolved drifts.
+PLUGINS_REFRESHED=0
 if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
   echo "-----game-server-output-thunderstore-pack $PACK_ID ${PACK_VER:-latest}"
   command -v jq >/dev/null 2>&1 || { echo "ERROR: jq required for Thunderstore install"; exit 1; }
@@ -127,10 +125,9 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
   fi
   PACK_VER=$(printf '%s' "$PACK_JSON" | jq -r '.version_number')
   RESOLVED_FILE="$MODULE_DIR/config/.thunderstore-resolved"
-  echo "-----thunderstore-install-resolve $PACK_AUTHOR/$PACK_NAME@$PACK_VER (deps=latest)"
+  echo "-----thunderstore-install-resolve $PACK_AUTHOR/$PACK_NAME@$PACK_VER (pack-deps-latest)"
 
   declare -A BEST_VER=()
-  QUEUE_KEYS=()
 
   ts_parse() {
     if [[ ! "$1" =~ ^([^-]+)-(.+)-([0-9]+\.[0-9].*)$ ]]; then
@@ -139,46 +136,24 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
     printf '%s\t%s\t%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"
   }
 
-  ts_enqueue() {
-    local author="$1" name="$2" version="$3" key="${1}-${2}"
-    local cur="${BEST_VER[$key]:-}"
-    if [ -z "$cur" ]; then
-      BEST_VER[$key]="$version"
-      QUEUE_KEYS+=("$key")
-      return 0
+  # Resolve each pack dependency string to Thunderstore latest.
+  BEST_VER["${PACK_AUTHOR}-${PACK_NAME}"]="$PACK_VER"
+  while IFS= read -r dep; do
+    [ -z "$dep" ] && continue
+    dparsed=$(ts_parse "$dep") || continue
+    IFS=$'\t' read -r da dn _dv <<<"$dparsed"
+    key="${da}-${dn}"
+    if [ -n "${BEST_VER[$key]:-}" ]; then
+      continue
     fi
-    local best
-    best=$(printf '%s\n%s\n' "$cur" "$version" | sort -V | tail -n1)
-    if [ "$best" != "$cur" ]; then
-      echo "-----thunderstore-install-upgrade $key $cur -> $best"
-      BEST_VER[$key]="$best"
-      QUEUE_KEYS+=("$key")
+    echo "-----thunderstore-install-resolve-latest $da/$dn"
+    latest=$(curl -sfL --retry 3 --retry-delay 1 "$API_BASE/$da/$dn/" | jq -r '.latest.version_number')
+    if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+      echo "ERROR: no Thunderstore latest for $da/$dn"
+      exit 1
     fi
-  }
-
-  # Seed with pack; for every dependency use Thunderstore latest (ignore pin versions).
-  ts_enqueue "$PACK_AUTHOR" "$PACK_NAME" "$PACK_VER"
-  idx=0
-  while [ "$idx" -lt "${#QUEUE_KEYS[@]}" ]; do
-    key="${QUEUE_KEYS[$idx]}"
-    idx=$((idx + 1))
-    parsed=$(ts_parse "${key}-${BEST_VER[$key]}") || continue
-    IFS=$'\t' read -r author name version <<<"$parsed"
-    echo "-----thunderstore-install-resolve-deps $author/$name@$version"
-    meta=$(curl -sfL --retry 3 --retry-delay 1 "$API_BASE/$author/$name/$version/") \
-      || { echo "ERROR: Thunderstore metadata failed $author/$name@$version"; exit 1; }
-    while IFS= read -r dep; do
-      [ -z "$dep" ] && continue
-      dparsed=$(ts_parse "$dep") || continue
-      IFS=$'\t' read -r da dn _dv <<<"$dparsed"
-      latest=$(curl -sfL --retry 3 --retry-delay 1 "$API_BASE/$da/$dn/" | jq -r '.latest.version_number')
-      if [ -z "$latest" ] || [ "$latest" = "null" ]; then
-        echo "WARN: no latest for $da/$dn"
-        continue
-      fi
-      ts_enqueue "$da" "$dn" "$latest"
-    done < <(printf '%s' "$meta" | jq -r '.dependencies[]?')
-  done
+    BEST_VER[$key]="$latest"
+  done < <(printf '%s' "$PACK_JSON" | jq -r '.dependencies[]?')
 
   RESOLVED_TEXT=$(
     for key in "${!BEST_VER[@]}"; do
@@ -211,7 +186,7 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
       INSTALL_KEYS+=("$key")
     done
 
-    # Parallel downloads (cap concurrency).
+    # Parallel package downloads (max 8).
     DL_PIDS=()
     DL_FAIL="$STAGING/download-failed"
     rm -f "$DL_FAIL"
@@ -273,11 +248,12 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
       echo "ERROR: Jotunn.dll missing after Thunderstore install"
       exit 1
     fi
-    # Atomic swap — keep prior plugins if we fail above.
+    # Swap plugins into place after a complete download/extract.
     rm -rf "$PLUGINS_DIR"
     mv "$NEW_PLUGINS" "$PLUGINS_DIR"
     printf '%s\n' "$RESOLVED_TEXT" > "$RESOLVED_FILE"
     rm -rf "$STAGING/zips"
+    PLUGINS_REFRESHED=1
     echo "-----thunderstore-install-done packages=$(printf '%s\n' "$RESOLVED_TEXT" | wc -l) dlls=$dlls"
   fi
 fi
@@ -295,6 +271,9 @@ docker run --rm \
   sh -c "chown -R 1000:1000 /vconfig /vdata"
 
 echo "-----game-server-output-docker-compose"
-# Recreate so BepInEx reloads plugins after Thunderstore sync (up -d alone leaves a running container).
-docker compose --file "$COMPOSE_FILE" up -d --force-recreate
+if [ "$PLUGINS_REFRESHED" = "1" ]; then
+  docker compose --file "$COMPOSE_FILE" up -d --force-recreate
+else
+  docker compose --file "$COMPOSE_FILE" up -d
+fi
 echo "-----game-server-output-compose-up-ok"
