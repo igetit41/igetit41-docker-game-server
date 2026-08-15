@@ -75,8 +75,7 @@ fi
 chmod +x "$REPO_ROOT/_modules"/*.sh 2>/dev/null || true
 chmod +x "$MODULE_DIR"/*.sh 2>/dev/null || true
 chmod +x "$REPO_ROOT"/*.sh 2>/dev/null || true
-sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
-sudo systemctl daemon-reload
+# Unit file updates require root — only startup-script (metadata) installs/refreshes it.
 
 echo "-----game-server-output-install-env"
 install_env_from_metadata "$MODULE_DIR/valheim.env"
@@ -102,7 +101,6 @@ PACK_VER=$(grep -E '^THUNDERSTORE_PACK_VERSION=' "$MODULE_DIR/valheim.env" 2>/de
 # Thunderstore latest. Re-resolve on every start; reinstall when versions drift.
 if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
   echo "-----game-server-output-thunderstore-pack $PACK_ID ${PACK_VER:-latest}"
-  sudo apt-get install -y jq unzip >/dev/null 2>&1 || true
   command -v jq >/dev/null 2>&1 || { echo "ERROR: jq required for Thunderstore install"; exit 1; }
   command -v unzip >/dev/null 2>&1 || { echo "ERROR: unzip required for Thunderstore install"; exit 1; }
 
@@ -167,12 +165,13 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
     parsed=$(ts_parse "${key}-${BEST_VER[$key]}") || continue
     IFS=$'\t' read -r author name version <<<"$parsed"
     echo "-----thunderstore-install-resolve-deps $author/$name@$version"
-    meta=$(curl -sfL "$API_BASE/$author/$name/$version/")
+    meta=$(curl -sfL --retry 3 --retry-delay 1 "$API_BASE/$author/$name/$version/") \
+      || { echo "ERROR: Thunderstore metadata failed $author/$name@$version"; exit 1; }
     while IFS= read -r dep; do
       [ -z "$dep" ] && continue
       dparsed=$(ts_parse "$dep") || continue
       IFS=$'\t' read -r da dn _dv <<<"$dparsed"
-      latest=$(curl -sfL "$API_BASE/$da/$dn/" | jq -r '.latest.version_number')
+      latest=$(curl -sfL --retry 3 --retry-delay 1 "$API_BASE/$da/$dn/" | jq -r '.latest.version_number')
       if [ -z "$latest" ] || [ "$latest" = "null" ]; then
         echo "WARN: no latest for $da/$dn"
         continue
@@ -181,7 +180,6 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
     done < <(printf '%s' "$meta" | jq -r '.dependencies[]?')
   done
 
-  # Snapshot of Author-Name=version — if Thunderstore moved since last boot, reinstall.
   RESOLVED_TEXT=$(
     for key in "${!BEST_VER[@]}"; do
       printf '%s=%s\n' "$key" "${BEST_VER[$key]}"
@@ -193,10 +191,12 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
       && find "$PLUGINS_DIR" -type f -name '*.dll' -print -quit 2>/dev/null | grep -q .; then
     echo "-----thunderstore-install-skip-resolved-match packages=$(printf '%s\n' "$RESOLVED_TEXT" | wc -l)"
   else
-    echo "-----thunderstore-install-clear-plugins"
-    rm -rf "$PLUGINS_DIR"
-    mkdir -p "$PLUGINS_DIR"
+    echo "-----thunderstore-install-download-start packages=$(printf '%s\n' "$RESOLVED_TEXT" | wc -l)"
+    NEW_PLUGINS="$STAGING/plugins-new"
+    rm -rf "$NEW_PLUGINS" "$STAGING/zips"
+    mkdir -p "$NEW_PLUGINS" "$STAGING/zips" "$CONFIG_DIR" "$PATCHERS_DIR"
 
+    INSTALL_KEYS=()
     for key in "${!BEST_VER[@]}"; do
       parsed=$(ts_parse "${key}-${BEST_VER[$key]}") || continue
       IFS=$'\t' read -r author name version <<<"$parsed"
@@ -204,49 +204,81 @@ if [[ "${BEPINEX_FLAG,,}" == "true" ]] && [ -n "$PACK_ID" ]; then
         echo "-----thunderstore-install-skip-bepinex-pack ${author}-${name}"
         continue
       fi
-      # Modpack zip is dependency metadata only — skip installing it as a plugin.
       if [ "${author}-${name}" = "${PACK_AUTHOR}-${PACK_NAME}" ]; then
         echo "-----thunderstore-install-skip-modpack-meta ${author}-${name}"
         continue
       fi
-      echo "-----thunderstore-install-package $author/$name@$version"
-      zipfile="$STAGING/${author}-${name}-${version}.zip"
-      curl -sfL --retry 3 -o "$zipfile" "$DL_BASE/$author/$name/$version/" \
-        || { echo "ERROR: Thunderstore download failed $author/$name@$version"; exit 1; }
-      extract="$STAGING/extract-$$"
+      INSTALL_KEYS+=("$key")
+    done
+
+    # Parallel downloads (cap concurrency).
+    DL_PIDS=()
+    DL_FAIL="$STAGING/download-failed"
+    rm -f "$DL_FAIL"
+    for key in "${INSTALL_KEYS[@]}"; do
+      parsed=$(ts_parse "${key}-${BEST_VER[$key]}") || continue
+      IFS=$'\t' read -r author name version <<<"$parsed"
+      zipfile="$STAGING/zips/${author}-${name}-${version}.zip"
+      echo "-----thunderstore-install-download $author/$name@$version"
+      (
+        curl -sfL --retry 3 --retry-delay 1 -o "$zipfile" "$DL_BASE/$author/$name/$version/" \
+          || { echo "$author/$name@$version" >> "$DL_FAIL"; exit 1; }
+      ) &
+      DL_PIDS+=($!)
+      if [ "${#DL_PIDS[@]}" -ge 8 ]; then
+        for p in "${DL_PIDS[@]}"; do wait "$p" || true; done
+        DL_PIDS=()
+      fi
+    done
+    for p in "${DL_PIDS[@]}"; do wait "$p" || true; done
+    if [ -f "$DL_FAIL" ]; then
+      echo "ERROR: Thunderstore download failed: $(tr '\n' ' ' < "$DL_FAIL")"
+      exit 1
+    fi
+
+    for key in "${INSTALL_KEYS[@]}"; do
+      parsed=$(ts_parse "${key}-${BEST_VER[$key]}") || continue
+      IFS=$'\t' read -r author name version <<<"$parsed"
+      zipfile="$STAGING/zips/${author}-${name}-${version}.zip"
+      echo "-----thunderstore-install-extract $author/$name@$version"
+      extract="$STAGING/extract-$$-${author}-${name}"
       rm -rf "$extract"
       mkdir -p "$extract"
       unzip -qo "$zipfile" -d "$extract" \
         || { echo "ERROR: Thunderstore unzip failed $zipfile"; exit 1; }
-      [ -d "$extract/BepInEx/config" ] && mkdir -p "$CONFIG_DIR" && cp -a "$extract/BepInEx/config"/. "$CONFIG_DIR/"
-      [ -d "$extract/BepInEx/patchers" ] && mkdir -p "$PATCHERS_DIR" && cp -a "$extract/BepInEx/patchers"/. "$PATCHERS_DIR/"
-      [ -d "$extract/patchers" ] && mkdir -p "$PATCHERS_DIR" && cp -a "$extract/patchers"/. "$PATCHERS_DIR/"
+      [ -d "$extract/BepInEx/config" ] && cp -a "$extract/BepInEx/config"/. "$CONFIG_DIR/"
+      [ -d "$extract/BepInEx/patchers" ] && cp -a "$extract/BepInEx/patchers"/. "$PATCHERS_DIR/"
+      [ -d "$extract/patchers" ] && cp -a "$extract/patchers"/. "$PATCHERS_DIR/"
       if [ -d "$extract/BepInEx/plugins" ]; then
-        cp -a "$extract/BepInEx/plugins"/. "$PLUGINS_DIR/"
+        cp -a "$extract/BepInEx/plugins"/. "$NEW_PLUGINS/"
       elif [ -d "$extract/plugins" ]; then
-        cp -a "$extract/plugins"/. "$PLUGINS_DIR/"
+        cp -a "$extract/plugins"/. "$NEW_PLUGINS/"
       else
-        dest="$PLUGINS_DIR/${author}-${name}"
+        dest="$NEW_PLUGINS/${author}-${name}"
         mkdir -p "$dest"
         find "$extract" -mindepth 1 -maxdepth 1 \
           ! -name 'manifest.json' ! -name 'icon.png' \
           ! -iname 'README.md' ! -iname 'CHANGELOG.md' ! -iname 'LICENSE*' \
           -exec cp -a {} "$dest/" \;
       fi
-      rm -rf "$extract" "$zipfile"
+      rm -rf "$extract"
     done
 
-    dlls=$(find "$PLUGINS_DIR" -type f -name '*.dll' | wc -l)
-    printf '%s\n' "$RESOLVED_TEXT" > "$RESOLVED_FILE"
-    echo "-----thunderstore-install-done packages=$(printf '%s\n' "$RESOLVED_TEXT" | wc -l) dlls=$dlls"
+    dlls=$(find "$NEW_PLUGINS" -type f -name '*.dll' | wc -l)
     if [ "$dlls" -lt 1 ]; then
       echo "ERROR: Thunderstore install produced no plugin DLLs"
       exit 1
     fi
-    if ! find "$PLUGINS_DIR" -type f -iname 'Jotunn.dll' | grep -q .; then
+    if ! find "$NEW_PLUGINS" -type f -iname 'Jotunn.dll' | grep -q .; then
       echo "ERROR: Jotunn.dll missing after Thunderstore install"
       exit 1
     fi
+    # Atomic swap — keep prior plugins if we fail above.
+    rm -rf "$PLUGINS_DIR"
+    mv "$NEW_PLUGINS" "$PLUGINS_DIR"
+    printf '%s\n' "$RESOLVED_TEXT" > "$RESOLVED_FILE"
+    rm -rf "$STAGING/zips"
+    echo "-----thunderstore-install-done packages=$(printf '%s\n' "$RESOLVED_TEXT" | wc -l) dlls=$dlls"
   fi
 fi
 

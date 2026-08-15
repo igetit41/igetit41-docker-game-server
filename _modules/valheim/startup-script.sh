@@ -135,10 +135,26 @@ if [ -f "$COMPOSE_FILE" ] && [ ! -f /etc/systemd/system/game-server.service ]; t
     sudo systemctl restart game-server
 fi
 
+# Root refreshes the unit every boot (game-server user has no sudo).
+if [ -f "$REPO_ROOT/_modules/game-server.service" ]; then
+  echo "-----startup-script-output-refresh-game-server-unit"
+  sudo cp "$REPO_ROOT/_modules/game-server.service" /etc/systemd/system/game-server.service
+  sudo systemctl daemon-reload
+  sudo systemctl enable game-server
+  sudo systemctl restart game-server
+fi
+
 echo "-----startup-script-output-waiting-for-valheim"
 LOOP_VAR=0
 while true; do
   LOOP_VAR=$((LOOP_VAR + 1))
+  # Ensure the unit is running (Thunderstore sync can take several minutes before compose up).
+  if [ -f /etc/systemd/system/game-server.service ] \
+      && ! systemctl is-active --quiet game-server; then
+    echo "-----startup-script-output-starting-game-server-unit"
+    sudo systemctl start game-server || true
+  fi
+  UNIT_STATE=$(systemctl is-active game-server 2>/dev/null || echo unknown)
   CONTAINER_UP=$(sudo docker ps --filter name=^game-server$ --format '{{.Status}}' 2>/dev/null || true)
   STATUS_OK=""
   if curl -sf --max-time 5 "http://127.0.0.1:80/status.json" >/dev/null 2>&1; then
@@ -146,7 +162,7 @@ while true; do
   elif sudo docker exec game-server test -f /opt/valheim/htdocs/status.json 2>/dev/null; then
     STATUS_OK=file
   fi
-  echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR container=${CONTAINER_UP:-missing} status=${STATUS_OK:-none}"
+  echo "-----startup-script-output-LOOP_VAR-$LOOP_VAR unit=$UNIT_STATE container=${CONTAINER_UP:-missing} status=${STATUS_OK:-none}"
   if [ -n "$CONTAINER_UP" ] && [ -n "$STATUS_OK" ]; then
     echo "-----startup-script-output-GAMESERVER_RUNNING-status-$STATUS_OK"
     break
